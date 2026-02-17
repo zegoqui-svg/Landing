@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   ASISTENTE DE SUBIDA SILUEL A GITHUB
+echo   ASISTENTE DE SUBIDA FORZADA SILUEL A GITHUB
 echo ========================================
 
 REM Configuracion de identidad para este repositorio
@@ -16,11 +16,11 @@ git branch -M main
 git remote remove origin
 git remote add origin https://github.com/zegoqui-svg/Landing.git
 
-REM Subiendo a GitHub
+REM Forzando la subida a GitHub (Sobrescribiendo historial remoto)
 echo Subiendo archivos a https://github.com/zegoqui-svg/Landing.git...
-git push -u origin main
+git push -u origin main --force
 
 echo ========================================
-echo   PROCESO COMPLETADO
+echo   PROCESO COMPLETADO EXITOSAMENTE
 echo ========================================
 pause
