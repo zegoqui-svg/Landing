@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Service } from '@/src/types';
@@ -24,6 +24,23 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
+  // Generate next 7 days
+  const upcomingDays = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      days.push({
+        fullDate: d.toISOString().split('T')[0],
+        dayName: d.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', ''),
+        dayNumber: d.getDate(),
+        monthName: d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', ''),
+      });
+    }
+    return days;
+  }, []);
+
   const handleClose = () => {
     setStep('service');
     setDate('');
@@ -34,8 +51,8 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const handleWhatsAppBooking = () => {
     if (!selectedService || !date || !time) return;
 
-    // Format date for better readability in WhatsApp
-    const formattedDate = new Date(date).toLocaleDateString('es-MX', {
+    // Use T12:00:00 to avoid timezone issues
+    const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('es-MX', {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
@@ -111,34 +128,61 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
               <div className="bg-brand-white rounded-xl p-6 shadow-sm space-y-6">
                 <h5 className="font-semibold text-brand-dark text-lg mb-2">Selecciona tu disponibilidad</h5>
 
-                <div className="space-y-4">
-                  {/* Date Picker */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-brand-warm" /> 1. Elige el día
+                <div className="space-y-6">
+                  {/* Date Selector */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-brand-dark/80 flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-brand-warm" /> 1. Elige el día
+                      </span>
                     </label>
-                    <input
-                      type="date"
-                      value={date}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full p-3 bg-brand-light/50 border border-brand-dark/10 rounded-lg focus:ring-2 focus:ring-brand-warm focus:border-transparent outline-none transition-all"
-                    />
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar">
+                      {upcomingDays.map((d) => (
+                        <button
+                          key={d.fullDate}
+                          onClick={() => setDate(d.fullDate)}
+                          className={`flex-shrink-0 w-16 h-20 flex flex-col items-center justify-center rounded-xl border transition-all duration-200 ${date === d.fullDate
+                            ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
+                            : 'bg-white text-brand-dark/70 border-brand-dark/10 hover:border-brand-warm/30'
+                            }`}
+                        >
+                          <span className="text-[10px] uppercase font-bold tracking-tighter opacity-70 mb-1">{d.dayName}</span>
+                          <span className="text-2xl font-serif font-bold leading-none">{d.dayNumber}</span>
+                          <span className="text-[10px] uppercase font-medium mt-1">{d.monthName}</span>
+                        </button>
+                      ))}
+                      <div className="flex-shrink-0 relative">
+                        <input
+                          type="date"
+                          value={date}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className={`w-16 h-20 flex flex-col items-center justify-center rounded-xl border border-dashed transition-all ${date && !upcomingDays.find(d => d.fullDate === date)
+                            ? 'bg-brand-dark text-white border-brand-dark shadow-md'
+                            : 'border-brand-dark/20 bg-brand-dark/5 text-brand-dark/40'
+                          }`}>
+                          <Calendar className="w-5 h-5 mb-1" />
+                          <span className="text-[8px] uppercase font-bold text-center leading-none">Otro<br />día</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Time Grid */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-brand-warm" /> 2. Elige la hora
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {BUSINESS_HOURS.map((hour) => (
                         <button
                           key={hour}
                           onClick={() => setTime(hour)}
-                          className={`py-2 px-3 text-sm font-medium rounded-lg border transition-all duration-200 ${time === hour
-                              ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
-                              : 'bg-white text-brand-dark/70 border-brand-dark/10 hover:border-brand-warm/40 hover:bg-brand-warm/5'
+                          className={`py-3 text-xs font-semibold rounded-lg border transition-all duration-200 ${time === hour
+                            ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
+                            : 'bg-white text-brand-dark/70 border-brand-dark/10 hover:border-brand-warm/40 hover:bg-brand-warm/5'
                             }`}
                         >
                           {hour}
@@ -148,10 +192,10 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                   </div>
                 </div>
 
-                <div className="bg-brand-warm/10 p-4 rounded-lg mt-4">
-                  <p className="text-sm text-brand-dark/80 flex items-start gap-2">
+                <div className="bg-brand-warm/10 p-4 rounded-lg">
+                  <p className="text-sm text-brand-dark/80 flex items-start gap-2 leading-relaxed">
                     <MessageCircle className="w-4 h-4 mt-0.5 text-brand-warm flex-shrink-0" />
-                    <span>Confirmaremos la disponibilidad exacta de tu cita una vez envíes el mensaje.</span>
+                    <span>Haremos lo posible por agendarte en tu horario preferido. Confirmaremos vía WhatsApp.</span>
                   </p>
                 </div>
               </div>
@@ -169,7 +213,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                   disabled={!date || !time}
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
-                  Confirmar cita
+                  Agendar por WhatsApp
                 </Button>
               </div>
             </div>
