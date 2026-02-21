@@ -34,7 +34,7 @@ export function ExpertProfile() {
             <div className="absolute -bottom-6 -left-6 z-20 bg-brand-dark text-white p-6 rounded-2xl shadow-xl border border-brand-warm/20 flex flex-col items-center">
               <Award className="w-8 h-8 text-brand-warm mb-2" />
               <span className="text-2xl font-serif font-bold leading-none">10+</span>
-              <span className="text-[10px] uppercase tracking-widest font-medium opacity-80 mt-1">Años Exp.</span>
+              <span className="text-[10px] uppercase tracking-widest font-medium opacity-80 mt-1">Años de Experiencia</span>
             </div>
 
             {/* Decorative frames */}

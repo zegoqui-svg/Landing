@@ -50,7 +50,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'corporal',
-    image: 'https://images.unsplash.com/photo-1544161515-4af6b1d46bdc?auto=format&fit=crop&q=80&w=800', // Hands on body treatment
+    image: '/images/masaje-reductivo.jpg',
   },
   {
     id: 'maderoterapia',
@@ -59,7 +59,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'corporal',
-    image: 'https://images.unsplash.com/photo-1661780447153-f72566786a34?auto=format&fit=crop&q=80&w=800', // Actual wooden massage tools (Getty)
+    image: '/images/maderoterapia.png',
   },
   {
     id: 'levantamiento-gluteos',
@@ -68,7 +68,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'corporal',
-    image: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc2069?auto=format&fit=crop&q=80&w=800', // Clinical aesthetic environment
+    image: '/images/levantamiento-gluteos.jpg',
   },
   {
     id: 'tecnicas-colombianas',
@@ -86,7 +86,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'recovery',
-    image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', // Clinic treatment room
+    image: '/images/post-operatorio.jpg',
   },
   {
     id: 'drenaje-linfatico',
@@ -95,7 +95,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'recovery',
-    image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&q=80&w=800', // Gentle medical massage style
+    image: '/images/drenaje-linfatico.jpg',
   },
   {
     id: 'faciales',
@@ -104,7 +104,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'facial',
-    image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=800', // Facial mask application
+    image: '/images/facial.jpg',
   },
   {
     id: 'masaje-relajante',
@@ -113,7 +113,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'masajes',
-    image: 'https://images.unsplash.com/photo-1626509653295-474378414212?auto=format&fit=crop&q=80&w=800', // Relaxing atmosphere
+    image: '/images/masaje-relajante.png',
   },
   {
     id: 'masaje-descontracturante',
@@ -122,7 +122,7 @@ export const services: Service[] = [
     price: '',
     duration: '',
     category: 'masajes',
-    image: 'https://images.unsplash.com/photo-1519415510271-e62b4d7598db?auto=format&fit=crop&q=80&w=800', // Trigger point pressure massage
+    image: '/images/masaje-descontracturante.png',
   },
 ];
 
@@ -132,7 +132,7 @@ export const testimonials: Testimonial[] = [
     name: 'Ana García',
     rating: 5,
     comment: 'La maderoterapia de SILUEL me cambió la vida. En solo 5 sesiones noté una diferencia increíble en mis medidas. Elsa es una profesional excepcional.',
-    image: 'https://images.unsplash.com/photo-1590642916589-592bca10dfbf?auto=format&fit=crop&q=80&w=400',
+    image: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=400',
   },
   {
     id: '2',
@@ -146,14 +146,14 @@ export const testimonials: Testimonial[] = [
     name: 'Claudia López',
     rating: 5,
     comment: 'Los faciales son increíbles. Mi piel nunca se había visto tan luminosa. Además, la facilidad para agendar cita por WhatsApp es muy práctica.',
-    image: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&q=80&w=400',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
   },
   {
     id: '4',
     name: 'Sandra Martínez',
     rating: 5,
     comment: 'Me encanta el ambiente tan cálido y profesional. Los masajes descontracturantes me ayudan mucho con el estrés del trabajo. ¡Totalmente recomendada!',
-    image: 'https://images.unsplash.com/photo-1563178430-f604ec20387d?auto=format&fit=crop&q=80&w=400',
+    image: 'https://images.unsplash.com/photo-1531123897727-8f129e16fd3c?auto=format&fit=crop&q=80&w=400',
   },
 ];
 

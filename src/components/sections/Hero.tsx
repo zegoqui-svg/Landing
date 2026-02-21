@@ -75,7 +75,7 @@ export function Hero({ onBookClick }: HeroProps) {
             <div className="mt-16 pt-8 border-t border-brand-dark/10 flex flex-wrap justify-center lg:justify-start gap-12 text-center lg:text-left">
               <div>
                 <p className="text-4xl font-serif text-brand-warm mb-1">10+</p>
-                <p className="text-xs uppercase tracking-wider text-brand-dark/60 font-medium">Anos de<br />Experiencia</p>
+                <p className="text-xs uppercase tracking-wider text-brand-dark/60 font-medium">Años de<br />Experiencia</p>
               </div>
               <div>
                 <p className="text-4xl font-serif text-brand-warm mb-1">9</p>
