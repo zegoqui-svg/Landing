@@ -132,28 +132,28 @@ export const testimonials: Testimonial[] = [
     name: 'Ana García',
     rating: 5,
     comment: 'La maderoterapia de SILUEL me cambió la vida. En solo 5 sesiones noté una diferencia increíble en mis medidas. Elsa es una profesional excepcional.',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+    image: '/images/ana-garcia.jpg',
   },
   {
     id: '2',
     name: 'Patricia Hernández',
     rating: 5,
     comment: 'Después de mi cirugía, el drenaje linfático en SILUEL fue fundamental para mi recuperación. El ambiente es muy relajante y el trato es excelente.',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400',
+    image: '/images/patricia-hernandez.jpg',
   },
   {
     id: '3',
     name: 'Claudia López',
     rating: 5,
     comment: 'Los faciales son increíbles. Mi piel nunca se había visto tan luminosa. Además, la facilidad para agendar cita por WhatsApp es muy práctica.',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
+    image: '/images/claudia-lopez.jpg',
   },
   {
     id: '4',
     name: 'Sandra Martínez',
     rating: 5,
     comment: 'Me encanta el ambiente tan cálido y profesional. Los masajes descontracturantes me ayudan mucho con el estrés del trabajo. ¡Totalmente recomendada!',
-    image: 'https://images.unsplash.com/photo-1531123897727-8f129e16fd3c?auto=format&fit=crop&q=80&w=400',
+    image: '/images/sandra-martinez.jpg',
   },
 ];
 

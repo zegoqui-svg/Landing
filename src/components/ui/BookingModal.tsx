@@ -24,19 +24,27 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-  // Generate next 7 days
   const upcomingDays = useMemo(() => {
     const days = [];
     const today = new Date();
-    for (let i = 0; i < 7; i++) {
+    let dCount = 0;
+    let daysFound = 0;
+
+    while (daysFound < 7) {
       const d = new Date();
-      d.setDate(today.getDate() + i);
-      days.push({
-        fullDate: d.toISOString().split('T')[0],
-        dayName: d.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', ''),
-        dayNumber: d.getDate(),
-        monthName: d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', ''),
-      });
+      d.setDate(today.getDate() + dCount);
+
+      // Skip Sundays (0 is Sunday)
+      if (d.getDay() !== 0) {
+        days.push({
+          fullDate: d.toISOString().split('T')[0],
+          dayName: d.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', ''),
+          dayNumber: d.getDate(),
+          monthName: d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', ''),
+        });
+        daysFound++;
+      }
+      dCount++;
     }
     return days;
   }, []);
@@ -160,8 +168,8 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
                         <div className={`w-16 h-20 flex flex-col items-center justify-center rounded-xl border border-dashed transition-all ${date && !upcomingDays.find(d => d.fullDate === date)
-                            ? 'bg-brand-dark text-white border-brand-dark shadow-md'
-                            : 'border-brand-dark/20 bg-brand-dark/5 text-brand-dark/40'
+                          ? 'bg-brand-dark text-white border-brand-dark shadow-md'
+                          : 'border-brand-dark/20 bg-brand-dark/5 text-brand-dark/40'
                           }`}>
                           <Calendar className="w-5 h-5 mb-1" />
                           <span className="text-[8px] uppercase font-bold text-center leading-none">Otro<br />día</span>
