@@ -132,7 +132,7 @@ export const testimonials: Testimonial[] = [
     name: 'Ana García',
     rating: 5,
     comment: 'La maderoterapia de SILUEL me cambió la vida. En solo 5 sesiones noté una diferencia increíble en mis medidas. Elsa es una profesional excepcional.',
-    image: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=400',
+    image: 'https://images.unsplash.com/photo-1531123414780-f74242c2b052?auto=format&fit=crop&q=80&w=400',
   },
   {
     id: '2',
