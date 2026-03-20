@@ -42,7 +42,7 @@ const blogPosts = [
   {
     slug: 'masajes-reductor-vs-relajante',
     title: 'Diferencias entre Masaje Reductor y Masaje Relajante',
-    excerpt: 'Conoce cuál es el tratamiento ideal para tus objetivos: model's tu cuerpo o aliviar el estrés.',
+    excerpt: "Conoce cuál es el tratamiento ideal para tus objetivos: modela tu cuerpo o aliviar el estrés.",
     image: '/images/masajes.jpg',
     date: '2026-03-05',
     category: 'Tratamientos',
