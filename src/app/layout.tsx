@@ -135,6 +135,81 @@ export default function RootLayout({
             })
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "¿Qué es la maderoterapia y qué beneficios tiene?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "La maderoterapia es una técnica ancestral que utiliza implementos de madera para modelar el cuerpo, reducir medidas y eliminar celulitis. Los beneficios incluyen reducción de grasa localizada, mejora de la circulación, eliminación de toxinas y relajación muscular."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Cuántas sesiones de maderoterapia necesito para ver resultados?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Los resultados suelen ser visibles desde la primera sesión, pero se recomienda un mínimo de 10 sesiones para obtener resultados duraderos. El número exacto depende de tus objetivos personales."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Qué incluye el tratamiento post-operatorio?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "El tratamiento post-operatorio incluye drenaje linfático especializado, masajes suaves y técnicas de recuperación diseñadas para acelerar la curación, reducir la inflamación y mejorar los resultados de la cirugía estética."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿La maderoterapia ayuda a eliminar la celulitis?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sí, la maderoterapia es muy efectiva para reducir la celulitis. Los implementos de madera ayudan a romper los depósitos de grasa, mejorar la circulación y tonificar la piel, reduciendo significativamente la apariencia de celulitis."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Dónde está ubicado SILUEL Centro de Terapia y Masaje?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Estamos en Plan de Ayala 1859, INT 28, Guadalajara, Jalisco. Cerca de la zona centro, con fácil acceso y estacionamiento disponible."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Cómo puedo agendar una cita en SILUEL?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Puedes agendar tu cita fácilmente a través de WhatsApp al 33 3965 7478, por teléfono, o mediante nuestro sistema de reservas en línea en la página web."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿Qué tipo de faciales ofrecen en SILUEL?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Ofrecemos faciales completamente personalizados según tu tipo de piel. Incluye limpieza profunda, hidratación, tratamiento anti-edad, luminosidad y más. Cada facial se adapta a las necesidades específicas de tu piel."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "¿El drenaje linfático ayuda a reducir retención de líquidos?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sí, el drenaje linfático es excelente para reducir la retención de líquidos, disminuir la inflamación, eliminar toxinas y mejorar la circulación. Es ideal después de cirugías o para personas con problemas de circulación."
+                  }
+                }
+              ]
+            })
+          }}
+        />
       </head>
       <body className={`${montserrat.variable} ${cormorant.variable} font-sans antialiased text-brand-dark bg-brand-light`}>
         {children}
