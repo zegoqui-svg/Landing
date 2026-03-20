@@ -63,6 +63,46 @@ const blogPosts = [
     date: '2026-02-20',
     category: 'Recuperación',
   },
+  {
+    slug: 'cuantas-sesiones-maderoterapia',
+    title: 'Cuántas Sesiones de Maderoterapia Necesitas para Ver Resultados',
+    excerpt: 'Te explicamos cuántas sesiones necesitas según tus objetivos: reducción de medidas, celulitis o mantenimiento.',
+    image: '/images/maderoterapia.png',
+    date: '2026-03-20',
+    category: 'Tratamientos',
+  },
+  {
+    slug: 'reduccion-medidas-guadalajara',
+    title: 'Reducción de Medidas en Guadalajara: Tratamientos más Efectivos',
+    excerpt: 'Descubre los tratamientos más efectivos para reducir medidas en Guadalajara. Maderoterapia, vacumterapia y más.',
+    image: '/images/corporales.jpg',
+    date: '2026-03-18',
+    category: 'Tratamientos',
+  },
+  {
+    slug: 'mejor-spa-guadalajara',
+    title: 'Cómo Elegir el Mejor Spa en Guadalajara',
+    excerpt: 'Guía completa para elegir el mejor spa y centro de estética en Guadalajara. Tips y recomendaciones.',
+    image: '/images/hero.png',
+    date: '2026-03-16',
+    category: 'Consejos',
+  },
+  {
+    slug: 'costo-maderoterapia',
+    title: 'Cuánto Cuesta la Maderoterapia en Guadalajara',
+    excerpt: 'Todo sobre precios y costos de la maderoterapia en Guadalajara. Qué esperar y qué incluye el tratamiento.',
+    image: '/images/masajes.jpg',
+    date: '2026-03-14',
+    category: 'Información',
+  },
+  {
+    slug: 'levantamiento-gluteos-sin-cirugia',
+    title: 'Levantamiento de Glúteos sin Cirugía: Opciones Disponibles',
+    excerpt: 'Logra glúteos más firmes y levantados sin necesidad de cirugía. Conoce las técnicas más efectivas.',
+    image: '/images/levantamiento-gluteos.jpg',
+    date: '2026-03-12',
+    category: 'Tratamientos',
+  },
 ]
 
 export default function BlogPage() {
