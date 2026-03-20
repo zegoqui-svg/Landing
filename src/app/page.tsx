@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Header } from '@/src/components/sections/Header';
 import { Hero } from '@/src/components/sections/Hero';
 import { ExpertProfile } from '@/src/components/sections/ExpertProfile';
 import { Services } from '@/src/components/sections/Services';
@@ -25,7 +26,8 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen pt-16">
+      <Header />
       <Hero onBookClick={handleBookClick} />
       <ExpertProfile />
       <Services onServiceSelect={handleServiceSelect} />
