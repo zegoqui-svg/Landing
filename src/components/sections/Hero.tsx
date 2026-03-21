@@ -2,6 +2,7 @@
 
 import { Button } from '../ui/Button';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { ArrowRight, Star } from 'lucide-react';
 import { heroImage } from '@/src/data';
 
@@ -12,17 +13,19 @@ interface HeroProps {
 export function Hero({ onBookClick }: HeroProps) {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-brand-light">
-      {/* Background Image / Gradient */}
+      {/* Background Image with LCP Optimization */}
       <div className="absolute inset-0 z-0">
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat opacity-20 lg:opacity-100"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-          }}
-        >
-          {/* Overlay gradient for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-light via-brand-light/90 to-brand-light/20 lg:to-transparent" />
-        </div>
+        <Image
+          src={heroImage}
+          alt="SILUEL Centro de Terapia y Masaje"
+          fill
+          priority // Critical for LCP - loads immediately
+          sizes="100vw"
+          className="object-cover object-center"
+          quality={85}
+        />
+        {/* Overlay gradient for readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-light via-brand-light/90 to-brand-light/20 lg:to-transparent" />
       </div>
 
       {/* Content */}
@@ -71,7 +74,7 @@ export function Hero({ onBookClick }: HeroProps) {
               </Button>
             </div>
 
-            {/* Trust Badges - Redesigned */}
+            {/* Trust Badges */}
             <div className="mt-16 pt-8 border-t border-brand-dark/10 flex flex-wrap justify-center lg:justify-start gap-12 text-center lg:text-left">
               <div>
                 <p className="text-4xl font-serif text-brand-warm mb-1">10+</p>
@@ -89,11 +92,9 @@ export function Hero({ onBookClick }: HeroProps) {
           </motion.div>
         </div>
 
-        {/* Visual Column (hidden on mobile layout due to bg image, visible on lg as separate element if desired, or kept as bg) */}
-        {/* We keep the background image approach for responsiveness but refined the overlay */}
+        {/* Visual Column - Hidden on desktop, image is background */}
         <div className="hidden lg:block flex-1 h-[600px] relative">
-          {/* This space is intentionally left empty to reveal the background image on desktop */}
-          {/* Alternatively, we could place a floating interactive element here */}
+          {/* Space intentionally empty - background image shows through */}
         </div>
       </div>
     </section>
