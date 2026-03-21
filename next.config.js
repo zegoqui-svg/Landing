@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // SEO optimizations
-  trailingSlash: true,
+  trailingSlash: false,
   
   // Image optimization
   images: {
