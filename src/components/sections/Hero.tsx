@@ -54,7 +54,7 @@ export function Hero({ onBookClick }: HeroProps) {
             </h1>
 
             <p className="text-lg sm:text-xl text-brand-dark/80 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">
-              Cosmetóloga certificada con más de 10 años de experiencia.
+              Cosmetóloga profesional con más de 10 años de experiencia.
               Maderoterapia, drenaje linfático y cuidado post-operatorio,
               con resultados visibles.
             </p>
@@ -80,7 +80,7 @@ export function Hero({ onBookClick }: HeroProps) {
               <button
                 type="button"
                 onClick={() => document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-sm text-brand-dark/70 underline underline-offset-4 decoration-brand-dark/30 hover:text-brand-dark hover:decoration-brand-dark rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark py-2"
+                className="text-sm text-brand-dark/75 underline underline-offset-4 decoration-brand-dark/30 hover:text-brand-dark hover:decoration-brand-dark rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark inline-flex items-center min-h-[44px] px-1"
               >
                 Ver servicios
               </button>

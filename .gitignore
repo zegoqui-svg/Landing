@@ -6,3 +6,7 @@ out/
 .DS_Store
 *.log
 .vercel
+
+# Workspace-local (no se commitea desde ninguna rama mejora-diaria)
+00-snapshot-inicio.md
+.baseline/
