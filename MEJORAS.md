@@ -51,3 +51,20 @@ Formato de cada entrada:
 **Preview**: pendiente — ver sección de estado.
 **Métrica esperada**: ↓ salidas por rebote/"¿esto es real?" en testimonios (proxy: tasa de clic en Reservar desde la sección de testimonios). Sin baseline de GA por sección, se qualitative.
 **Estado**: ⚠️ **[WIP]** — commit `5d9afc8` sin build verificado. La máquina tenía 1.6 GiB de RAM disponible (por debajo del gate de 2 GiB del cron) y no se compiló. Push sí se hizo, la rama es `mejora-diaria/2026-10-21-r2`. **No publicar hasta que haya un build verde.**
+
+---
+
+## 2026-10-21 (r3) — Ritmo vertical: las secciones ya no son todas `py-24`
+
+**Principio**: ritmo de scroll / eye-flow — alternar densidades verticales guía la lectura; cuatro secciones idénticas producen una pantalla plana donde el ojo no encuentra dónde posarse.
+**Por qué**: H9 del diagnóstico. Hero, ExpertProfile, Servicios y Testimonials usaban los cuatro `py-24` (y el Hero `py-20`): cinco slabs de aire del mismo tamaño, sin pausa ni acento. Referencia: alternancia de spacing en Stripe y Apple HIG ("respiro" deliberado entre bloques).
+**Cambios** (4 archivos, 4 líneas, solo clases Tailwind — sin tocar contenido):
+- `Hero.tsx`: `py-20` → `pt-20 pb-28` (abre corto tras el header fijo, cierra con aire antes de la siguiente sección).
+- `ExpertProfile.tsx`: `py-24` → `pt-28 pb-24` (espejo del Hero → los dos se acoplan visualmente).
+- `Services.tsx`: `py-24` → `pt-32 pb-28` (entrada más profunda: es el bloque que cambia de tema, se marca).
+- `Testimonials.tsx`: `py-24` → `pt-28 pb-36` (el cierre de página respira más antes del Footer `py-20`).
+Ninguna sección adyacente comparte ya la misma suma vertical, así que el scroll tiene cadencia en lugar de repetición.
+**Rama**: mejora-diaria/2026-10-21-r3
+**Preview**: pendiente — ver sección de estado.
+**Métrica esperada**: ↑ tiempo en página / ↓ rebote (scroll más pausado invites a leer testimonios, la última capa de confianza antes del CTA de contacto). Proxy cualitativo: profundidad de scroll hasta el Footer.
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: Chromium del host no arranca por libs de sistema y el cron no puede usar sudo.

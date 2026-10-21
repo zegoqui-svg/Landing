@@ -29,7 +29,7 @@ export function Hero({ onBookClick }: HeroProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col lg:flex-row items-center gap-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 flex flex-col lg:flex-row items-center gap-12">
 
         {/* Text Column */}
         <div className="flex-1 max-w-2xl text-center lg:text-left">

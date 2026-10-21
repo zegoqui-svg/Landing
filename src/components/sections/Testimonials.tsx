@@ -30,7 +30,7 @@ function getTestimonialTreatment(comment: string): string | null {
 
 export function Testimonials() {
   return (
-    <section className="py-24 bg-brand-light relative overflow-hidden">
+    <section className="pt-28 pb-36 bg-brand-light relative overflow-hidden">
       {/* Background patterns */}
       <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(#1A3C34 1px, transparent 1px)', backgroundSize: '40px 40px' }} />

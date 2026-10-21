@@ -27,7 +27,7 @@ export function Services({ onServiceSelect }: ServicesProps) {
   const activeCategoryData = serviceCategories.find(c => c.id === activeCategory);
 
   return (
-    <section id="servicios" className="py-24 bg-brand-light relative">
+    <section id="servicios" className="pt-32 pb-28 bg-brand-light relative">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-1/3 h-full bg-brand-warm/5 pointer-events-none" />
 
