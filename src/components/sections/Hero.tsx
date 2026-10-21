@@ -54,40 +54,36 @@ export function Hero({ onBookClick }: HeroProps) {
             </h1>
 
             <p className="text-lg sm:text-xl text-brand-dark/80 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-light">
-              Descubre la experiencia SILUEL: maderoterapia, tratamientos reductivos,
-              masajes terapeuticos y faciales personalizados.
-              Relajacion profunda y resultados visibles.
+              Cosmetóloga certificada con más de 10 años de experiencia.
+              Maderoterapia, drenaje linfático y cuidado post-operatorio,
+              con resultados visibles.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button onClick={onBookClick} size="lg" className="bg-brand-dark hover:bg-brand-primary text-white px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
-                Agenda tu Cita
-                <ArrowRight className="w-5 h-5 ml-2" />
+            <div className="flex flex-col items-center lg:items-start gap-4">
+              <Button onClick={onBookClick} size="lg" className="bg-brand-dark hover:bg-brand-primary text-white px-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+                Reservar mi cita
+                <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-brand-dark/20 text-brand-dark hover:bg-brand-dark/5 rounded-full px-8"
-              >
-                Ver Servicios
-              </Button>
-            </div>
 
-            {/* Trust Badges */}
-            <div className="mt-16 pt-8 border-t border-brand-dark/10 flex flex-wrap justify-center lg:justify-start gap-12 text-center lg:text-left">
-              <div>
-                <p className="text-4xl font-serif text-brand-warm mb-1">10+</p>
-                <p className="text-xs uppercase tracking-wider text-brand-dark/60 font-medium">Años de<br />Experiencia</p>
-              </div>
-              <div>
-                <p className="text-4xl font-serif text-brand-warm mb-1">9</p>
-                <p className="text-xs uppercase tracking-wider text-brand-dark/60 font-medium">Servicios<br />Especializados</p>
-              </div>
-              <div>
-                <p className="text-4xl font-serif text-brand-warm mb-1">100%</p>
-                <p className="text-xs uppercase tracking-wider text-brand-dark/60 font-medium">Atencion<br />Personalizada</p>
-              </div>
+              {/* Prueba social inmediata, pegada al CTA (solo cifras ya publicadas en el sitio) */}
+              <p className="flex flex-wrap items-center justify-center lg:justify-start gap-x-2 gap-y-1 text-sm text-brand-dark/75">
+                <span className="inline-flex items-center gap-1 font-semibold text-brand-dark">
+                  <Star className="w-4 h-4 text-brand-warm fill-brand-warm" aria-hidden="true" />
+                  4.9/5
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>500+ clientes</span>
+                <span aria-hidden="true">·</span>
+                <span>10+ años de experiencia</span>
+              </p>
+
+              <button
+                type="button"
+                onClick={() => document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-sm text-brand-dark/70 underline underline-offset-4 decoration-brand-dark/30 hover:text-brand-dark hover:decoration-brand-dark rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark py-2"
+              >
+                Ver servicios
+              </button>
             </div>
           </motion.div>
         </div>
