@@ -1,9 +1,32 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { testimonials } from '@/src/data';
+import { testimonials, services } from '@/src/data';
 import { Card } from '../ui/Card';
 import { Star, Quote } from 'lucide-react';
+
+/**
+ * Derives the "what they came for" line under each testimonial name from the
+ * quote itself, matching only against service names already published in
+ * `src/data/index.ts`. Returns null when no published service is mentioned,
+ * in which case we render nothing rather than inventing a claim.
+ */
+function getTestimonialTreatment(comment: string): string | null {
+  const normalized = comment.toLowerCase();
+  const match = services.find((service) => {
+    const name = service.name.toLowerCase();
+    // Accept the plural form too: quotes say "masajes descontracturantes",
+    // the published service is "Descontracturante" (singular).
+    if (normalized.includes(name) || normalized.includes(`${name}s`)) return true;
+    // Multi-word services ("Faciales según tipo de piel") never appear
+    // verbatim in a quote, which only says "los faciales". Fall back to the
+    // leading noun, still strictly from the published catalog.
+    const head = name.split(' ')[0];
+    return head.length > 3 && normalized.includes(head);
+  });
+
+  return match ? match.name : null;
+}
 
 export function Testimonials() {
   return (
@@ -65,13 +88,17 @@ export function Testimonials() {
                           className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
                         />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 bg-brand-warm text-white p-1 rounded-full border-2 border-white">
-                        <CheckCircle className="w-3 h-3" />
-                      </div>
                     </div>
                     <div>
                       <h4 className="font-serif font-bold text-lg text-brand-dark">{testimonial.name}</h4>
-                      <p className="text-xs uppercase tracking-widest text-brand-warm font-semibold">Cliente Verificado</p>
+                      {(() => {
+                        const treatment = getTestimonialTreatment(testimonial.comment);
+                        return treatment ? (
+                          <p className="text-xs uppercase tracking-widest text-brand-dark/55 font-semibold">
+                            {treatment}
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -119,6 +146,3 @@ export function Testimonials() {
     </section>
   );
 }
-
-// Added missing import
-import { CheckCircle } from 'lucide-react';
