@@ -16,6 +16,21 @@ Formato de cada entrada:
 
 ---
 
+## 2026-10-22 — Servicios: `<img>` → `next/image` con lazy load
+
+**Principio**: carga progresiva — no pedir al móvil bytes de imágenes que están dos pantallas más abajo; y la imagen debe tener dimensiones declaradas para no provocar CLS al cargar.
+**Por qué**: el ítem #9 del backlog. Las 6 fotos de la parrilla de Servicios se pedían completas y de forma eager al abrir la página, aunque la sección está por debajo del hero y del perfil. `next/image` además sirve AVIF/WebP y dimensionado por `deviceSizes`, así que baja el peso transferred por visita.
+**Cambios** (1 archivo, +5/-2):
+- `src/components/sections/Services.tsx`: import de `next/image`; el `<img>` de la tarjeta pasa a `<Image>` con `width={640}` `height={480}` (coincide con el `aspect-[4/3]` del contenedor) y `loading="lazy"`. Se conservan `alt={service.name}`, `object-cover` y el `group-hover:scale-110` intactos.
+**Por qué no se tocaron los otros `<img>`**: `BookingModal.tsx`, `ExpertProfile.tsx` y `Testimonials.tsx` también los tienen, pero quedan fuera del diff de hoy (regla de una mejora acotada por corrida). Quedan anotados como pendientes.
+**Nota operativa**: la máquina bajó a ~1.67 GiB de RAM disponible (bajo el gate de 2 GiB del cron) por **browsers headless huérfanos de hace 3 días** (~1.9 GB en 3 procesos Chromium de los runs del 19 y 20 de oct). No se los maté porque el cron no reinicia procesos; se compiló con `NODE_OPTIONS=--max-old-space-size=1152` y el build salió verde en el primer intento. **Vale la pena limpiarlos a mano**: liberan ~1.9 GB.
+**Rama**: mejora-diaria/2026-10-22
+**Preview**: pendiente — ver sección de estado.
+**Métrica esperada**: ↓ bytes de imagen en la carga inicial y ↓ CLS (Cumulative Layout Shift) en móvil; los Core Web Vitals de la sección Servicios.
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
+
+---
+
 ## 2026-10-21 — Hero con CTA único + "Reservar" en el header + prueba social inmediata
 
 **Principio**: Ley de Hick (menos opciones, más acción), una sola acción dominante (Apple, Stripe), CTA persistente arriba (patrón F, Airbnb) y prueba social adyacente a la acción (Cialdini).

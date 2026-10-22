@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Service, ServiceCategory } from '@/src/types';
 import { services, serviceCategories } from '@/src/data';
@@ -97,9 +98,12 @@ export function Services({ onServiceSelect }: ServicesProps) {
                 {/* Image */}
                 <div className="aspect-[4/3] overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                  <img
+                  <Image
                     src={service.image}
                     alt={service.name}
+                    width={640}
+                    height={480}
+                    loading="lazy"
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute bottom-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
