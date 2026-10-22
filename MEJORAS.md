@@ -25,9 +25,9 @@ Formato de cada entrada:
 **Por qué no se tocaron los otros `<img>`**: `BookingModal.tsx`, `ExpertProfile.tsx` y `Testimonials.tsx` también los tienen, pero quedan fuera del diff de hoy (regla de una mejora acotada por corrida). Quedan anotados como pendientes.
 **Nota operativa**: la máquina bajó a ~1.67 GiB de RAM disponible (bajo el gate de 2 GiB del cron) por **browsers headless huérfanos de hace 3 días** (~1.9 GB en 3 procesos Chromium de los runs del 19 y 20 de oct). No se los maté porque el cron no reinicia procesos; se compiló con `NODE_OPTIONS=--max-old-space-size=1152` y el build salió verde en el primer intento. **Vale la pena limpiarlos a mano**: liberan ~1.9 GB.
 **Rama**: mejora-diaria/2026-10-22
-**Preview**: pendiente — ver sección de estado.
+**Preview**: https://spa-landing-h23fq3v7w-zegoqui-svgs-projects.vercel.app — deployment `dpl_7ydgT65ayoujj4YzjBjSFn1eD4Wz` en estado READY (SHA `d219ac2`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: hace falta iniciar sesión en Vercel para verla.
 **Métrica esperada**: ↓ bytes de imagen en la carga inicial y ↓ CLS (Cumulative Layout Shift) en móvil; los Core Web Vitals de la sección Servicios.
-**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) y preview READY.
 
 ---
 
