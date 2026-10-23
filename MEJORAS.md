@@ -31,7 +31,7 @@ Formato de cada entrada:
 | `elsa.png` (fundadora) | 985,389 B | 5,940 B AVIF @w=828 | −99.4 % |
 Verificado también que el HTML servido ya no contiene ni un `<img>` fuera de `/_next/image`, y que el `srcset` del avatar trae `sizes="64px"` (el móvil descarga la variante de 64 px, no la de 2048 px).
 **Rama**: mejora-diaria/2026-10-23
-**Preview**: https://spa-landing-7w5mj1rra-zegoqui-svgs-projects.vercel.app — deployment `dpl_vih21tpxbQ3Phx8h4uzcUwK1LeTd` en estado READY (SHA `43564ad`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: responde 302 a `vercel.com/sso-api` y termina en `vercel.com/login` (título "Login – Vercel"). Hace falta iniciar sesión en Vercel para verla.
+**Preview**: https://spa-landing-1sug0ns8g-zegoqui-svgs-projects.vercel.app — deployment `dpl_Fv8fW6YoWV1rZSATpKC2K7TuiZFG` en estado READY (SHA `eda8cd5`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: responde 302 a `vercel.com/sso-api` y termina en `vercel.com/login` (título "Login – Vercel"). Hace falta iniciar sesión en Vercel para verla. (El deployment anterior del commit de código, `dpl_vih21tpxbQ3Phx8h4uzcUwK1LeTd` / SHA `43564ad`, quedó en https://spa-landing-7w5mj1rra-zegoqui-svgs-projects.vercel.app con la misma protección.)
 **Métrica esperada**: ↓ bytes de imagen transferidos por visita (del orden de 1.2 MB menos solo en el avatar de Ana y el retrato de Elsa) y ↓ LCP en la sección de perfil; los Core Web Vitals en móvil.
 **Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) y preview READY. Sin capturas: el Chromium local no arranca por libs de sistema y el cron no puede usar sudo.
 
