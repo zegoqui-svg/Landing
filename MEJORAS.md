@@ -16,6 +16,27 @@ Formato de cada entrada:
 
 ---
 
+## 2026-10-23 — `<img>` → `next/image` en perfil, testimonios y modal de reserva
+
+**Principio**: carga progresiva y Core Web Vitals — servir el tamaño real de la imagen en el formato moderno (AVIF/WebP) en vez del JPEG/PNG original completo; la imagen debe declarar sus dimensiones para no provocar CLS.
+**Por qué**: ítem #9b del backlog, derivado del #9 del 2026-10-22 (migración de Servicios). Quedaban tres `<img>` planos: el retrato de la fundadora, los cuatro avatares de testimonios y la miniatura del servicio en el BookingModal. Los pesos originales eran absurdos para el tamaño en pantalla: `elsa.png` 985 KB renderizado en un contenedor `aspect-[4/5]`, y avatares de 114–132 KB mostrados a 64×64 px.
+**Cambios** (3 archivos, +21/-8):
+- `src/components/sections/ExpertProfile.tsx`: `<img>` → `<Image fill sizes="(min-width: 1024px) 50vw, 100vw">` (el contenedor es `aspect-[4/5]`, no px fijos, así que `fill` es lo correcto; el padre ya es `relative` y `overflow-hidden`). Conserva `object-cover`, el `grayscale-[20%]` y el `hover:scale-105`.
+- `src/components/sections/Testimonials.tsx`: `<img>` → `<Image width={64} height={64} sizes="64px">`. Se colapsa el `<div className="relative">` envolvente, que ya no hacía falta: sus clases (tamaño, `rounded-full`, `overflow-hidden`, `ring-*`) pasan al div que sí contiene a la imagen.
+- `src/components/ui/BookingModal.tsx`: `<img>` → `<Image width={80} height={80} sizes="80px">` para la miniatura del servicio.
+**Medido contra el build local** (Next 14 + `deviceSizes`/`imageSizes` de `next.config.js`, formatos AVIF/WebP):
+| imagen | original | servido | ahorro |
+|---|---|---|---|
+| `ana-garcia.jpg` (avatar) | 114,160 B | 1,160 B AVIF @w=64 | −99.0 % |
+| `elsa.png` (fundadora) | 985,389 B | 5,940 B AVIF @w=828 | −99.4 % |
+Verificado también que el HTML servido ya no contiene ni un `<img>` fuera de `/_next/image`, y que el `srcset` del avatar trae `sizes="64px"` (el móvil descarga la variante de 64 px, no la de 2048 px).
+**Rama**: mejora-diaria/2026-10-23
+**Preview**: https://spa-landing-7w5mj1rra-zegoqui-svgs-projects.vercel.app — deployment `dpl_vih21tpxbQ3Phx8h4uzcUwK1LeTd` en estado READY (SHA `43564ad`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: responde 302 a `vercel.com/sso-api` y termina en `vercel.com/login` (título "Login – Vercel"). Hace falta iniciar sesión en Vercel para verla.
+**Métrica esperada**: ↓ bytes de imagen transferidos por visita (del orden de 1.2 MB menos solo en el avatar de Ana y el retrato de Elsa) y ↓ LCP en la sección de perfil; los Core Web Vitals en móvil.
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) y preview READY. Sin capturas: el Chromium local no arranca por libs de sistema y el cron no puede usar sudo.
+
+---
+
 ## 2026-10-22 — Servicios: `<img>` → `next/image` con lazy load
 
 **Principio**: carga progresiva — no pedir al móvil bytes de imágenes que están dos pantallas más abajo; y la imagen debe tener dimensiones declaradas para no provocar CLS al cargar.
