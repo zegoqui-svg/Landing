@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { expertInfo } from '@/src/data';
 import { Quote, Award, CheckCircle } from 'lucide-react';
 
@@ -23,10 +24,12 @@ export function ExpertProfile() {
             className="relative"
           >
             <div className="relative z-10 aspect-[4/5] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-8 border-white">
-              <img
+              <Image
                 src={expertInfo.image}
                 alt={expertInfo.name}
-                className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700 hover:scale-105"
               />
             </div>
 

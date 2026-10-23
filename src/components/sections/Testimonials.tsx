@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { testimonials, services } from '@/src/data';
 import { Card } from '../ui/Card';
 import { Star, Quote } from 'lucide-react';
@@ -80,15 +81,16 @@ export function Testimonials() {
 
                   {/* Author */}
                   <div className="flex items-center pt-8 border-t border-brand-dark/5">
-                    <div className="relative">
-                      <div className="w-16 h-16 rounded-full overflow-hidden mr-4 ring-4 ring-brand-warm/10 ring-offset-2">
-                        <img
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden mr-4 ring-4 ring-brand-warm/10 ring-offset-2">
+                        <Image
                           src={testimonial.image}
                           alt={testimonial.name}
-                          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
+                          width={64}
+                          height={64}
+                          sizes="64px"
+                          className="object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
                         />
                       </div>
-                    </div>
                     <div>
                       <h4 className="font-serif font-bold text-lg text-brand-dark">{testimonial.name}</h4>
                       {(() => {

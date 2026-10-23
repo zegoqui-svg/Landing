@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Service } from '@/src/types';
@@ -231,7 +232,14 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
               <div className="bg-brand-white rounded-xl p-6 shadow-sm">
                 <div className="flex items-start space-x-4">
                   <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    <img src={selectedService.image} alt={selectedService.name} className="w-full h-full object-cover" />
+                    <Image
+                      src={selectedService.image}
+                      alt={selectedService.name}
+                      width={80}
+                      height={80}
+                      sizes="80px"
+                      className="object-cover"
+                    />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-xl font-semibold text-brand-dark font-serif mb-1">{selectedService.name}</h4>
