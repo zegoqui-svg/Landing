@@ -21,11 +21,15 @@ export function Hero({ onBookClick }: HeroProps) {
           fill
           priority // Critical for LCP - loads immediately
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-[60%_center] lg:object-center"
           quality={85}
         />
-        {/* Overlay gradient for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-light via-brand-light/90 to-brand-light/20 lg:to-transparent" />
+        {/* Overlay gradient for readability.
+            Móvil: el degradado horizontal tapaba la imagen por completo (en un viewport
+            angosto solo se ve el extremo `from-brand-light`, 100% opaco). Aquí va un
+            velo vertical suave que deja leer la foto bajo el texto.
+            Desktop: el degradado horizontal abre a la derecha y la imagen respira. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-light/85 via-brand-light/70 to-brand-light/40 lg:bg-gradient-to-r lg:from-brand-light lg:via-brand-light/90 lg:to-transparent" />
       </div>
 
       {/* Content */}
@@ -33,6 +37,9 @@ export function Hero({ onBookClick }: HeroProps) {
 
         {/* Text Column */}
         <div className="flex-1 max-w-2xl text-center lg:text-left">
+          {/* Velo de lectura: en móvil el degradado deja ver la foto, así que el texto
+              necesita su propio respaldo para mantener contraste AA sobre la imagen. */}
+          <div className="rounded-3xl bg-brand-light/80 px-4 py-6 -mx-4 backdrop-blur-[2px] sm:px-6 lg:bg-transparent lg:px-0 lg:py-0 lg:mx-0 lg:backdrop-blur-none">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -86,6 +93,7 @@ export function Hero({ onBookClick }: HeroProps) {
               </button>
             </div>
           </motion.div>
+          </div>
         </div>
 
         {/* Visual Column - Hidden on desktop, image is background */}
