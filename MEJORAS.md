@@ -34,9 +34,9 @@ Formato de cada entrada:
 | peor caso | — | **5,17:1 (AA)** |
 El texto sigue cumpliendo AA en móvil con la foto de fondo; el objetivo era que la foto se viera *sin* sacrificar contraste.
 **Rama**: mejora-diaria/2026-10-24
-**Preview**: pendiente — ver sección de estado.
+**Preview**: https://spa-landing-lp60t80oc-zegoqui-svgs-projects.vercel.app — deployment `dpl_CVz8kRBV9x8pzLAkYB7A4eAupHmX` en estado READY (SHA `4543f5e`, `target` ≠ production), pero el proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: responde 302 a `vercel.com/sso-api` y termina en `vercel.com/login` (título "Login – Vercel"). Hace falta iniciar sesión en Vercel para verla.
 **Métrica esperada**: ↑ tiempo en página y ↓ rebote en móvil (el hero deja de ser un bloque de texto plano y pasa a anclar la atención); ↑ scrolls hasta "Servicios". Proxy: Core Web Vitals de móvil y profundidad de scroll.
-**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue numérica sobre la imagen real.
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) y preview READY. Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue numérica sobre la imagen real.
 
 ---
 
