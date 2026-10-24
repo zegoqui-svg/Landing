@@ -16,6 +16,30 @@ Formato de cada entrada:
 
 ---
 
+## 2026-10-24 — Hero móvil: la foto del hero ahora sí se ve
+
+**Principio**: mobile-first visual — en una landing, la imagen del hero es el argumento de venta antes de leer una sola palabra; si el 70 % del tráfico móvil no la ve, el hero no existe para ese usuario.
+**Por qué**: ítem #6 del backlog (H5 del diagnóstico). El hallazgo original decía que en desktop la imagen aparecía "detrás del texto" y en móvil solo había un degradado. La causa concreta era el degradado **horizontal** `from-brand-light via-brand-light/90 to-brand-light/20`: en un viewport angosto (390 px) solo se alcanza a ver el extremo `from-brand-light`, que es 100 % opaco, así que la foto quedaba **completamente tapada** en móvil. Sumado a `object-cover` con `object-center` sobre una imagen apaisada (2048×1064) recortada a un cuadro angosto, el sujeto (la sesión de maderoterapia) se perdía dos veces: por el velo y por el recorte.
+**Cambios** (1 archivo, +11/-3, solo `src/components/sections/Hero.tsx`):
+- El overlay pasa a ser **vertical en móvil** (`bg-gradient-to-b from-brand-light/85 via-brand-light/70 to-brand-light/40`), de modo que la foto respira bajo el texto. En desktop se conserva el degradado horizontal original (`lg:bg-gradient-to-r lg:from-brand-light lg:via-brand-light/90 lg:to-transparent`) **sin cambios visuales**: se verificó que los stops del CSS generado (`lg:from-brand-light`, `lg:via-brand-light/90`, `lg:to-transparent`) son idénticos a los del baseline.
+- `object-center` → `object-[60%_center] lg:object-center`: en móvil el recorte ancla al 60 % del ancho, donde está el sujeto (la camilla y las herramientas de maderoterapia), en vez del centro geométrico. En desktop se queda centrado como estaba.
+- Caja de lectura para el texto en móvil: `bg-brand-light/80` + `backdrop-blur-[2px]` + `rounded-3xl`, con resets `lg:bg-transparent lg:px-0 lg:py-0 lg:mx-0 lg:backdrop-blur-none` para que en desktop no haya ni caja ni cambio de layout.
+**Medido** (composición simulada sobre el PNG real, crop de 390×844 con `object-position: 60% center`, y razón de contraste WCAG 2.1 del texto compuesto sobre la foto):
+| | antes | después |
+|---|---|---|
+| píxel de foto visible en móvil | **0,0 %** | **16,4 %** |
+| contraste del título (`brand-dark`) | 11,20:1 | 10,68:1 |
+| contraste del párrafo (`brand-dark/80`) | 6,22:1 | 6,00:1 |
+| contraste de la prueba social (`brand-dark/75`) | 5,38:1 | 5,17:1 |
+| peor caso | — | **5,17:1 (AA)** |
+El texto sigue cumpliendo AA en móvil con la foto de fondo; el objetivo era que la foto se viera *sin* sacrificar contraste.
+**Rama**: mejora-diaria/2026-10-24
+**Preview**: pendiente — ver sección de estado.
+**Métrica esperada**: ↑ tiempo en página y ↓ rebote en móvil (el hero deja de ser un bloque de texto plano y pasa a anclar la atención); ↑ scrolls hasta "Servicios". Proxy: Core Web Vitals de móvil y profundidad de scroll.
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue numérica sobre la imagen real.
+
+---
+
 ## 2026-10-23 — `<img>` → `next/image` en perfil, testimonios y modal de reserva
 
 **Principio**: carga progresiva y Core Web Vitals — servir el tamaño real de la imagen en el formato moderno (AVIF/WebP) en vez del JPEG/PNG original completo; la imagen debe declarar sus dimensiones para no provocar CLS.
