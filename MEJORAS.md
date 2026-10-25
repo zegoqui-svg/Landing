@@ -138,6 +138,6 @@ Ninguna sección adyacente comparte ya la misma suma vertical, así que el scrol
 **Por qué**: ítem #8 del backlog (H15). Los CTA "Reservar" del header y del hero limpiaban el servicio seleccionado con `null`, pero `BookingModal` solo renderiza cuando `selectedService` existe; por eso ese flujo terminaba sin modal visible. Servicios ya enviaba el servicio correcto. Ahora `openBooking(service = null)` decide el contexto en un solo punto y deja explícito el fallback sin servicio, listo para que el modal pueda ofrecerlo.
 **Cambios** (1 archivo, +4/-6): `src/app/page.tsx` — `openBooking()` centraliza la apertura del modal; los wrappers de Hero/Header y Servicios conservan sus firmas públicas.
 **Rama**: mejora-diaria/2026-10-25
-**Preview**: pendiente de confirmar tras el push.
+**Preview**: https://spa-landing-pw47xcktd-zegoqui-svgs-projects.vercel.app — deployment `dpl_2pCKXkV1xG4JjPYf9GVHeS2wgzMc` READY (SHA `ca02e49`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: la URL redirige a `vercel.com/login`; hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↑ aperturas del `BookingModal` desde header y hero; proxy: clics en Reservar por sesión y paso a fecha/hora.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
