@@ -15,15 +15,13 @@ export default function Home() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const handleServiceSelect = (service: Service) => {
+  const openBooking = (service: Service | null = null) => {
     setSelectedService(service);
     setIsBookingOpen(true);
   };
 
-  const handleBookClick = () => {
-    setSelectedService(null);
-    setIsBookingOpen(true);
-  };
+  const handleServiceSelect = (service: Service) => openBooking(service);
+  const handleBookClick = () => openBooking();
 
   return (
     <main className="min-h-screen pt-16">

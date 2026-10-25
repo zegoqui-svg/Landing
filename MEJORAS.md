@@ -129,3 +129,15 @@ Ninguna sección adyacente comparte ya la misma suma vertical, así que el scrol
 **Preview**: https://spa-landing-njoegxcx8-zegoqui-svgs-projects.vercel.app — deployment `dpl_8qDSeExh7U9jufCcPPo9p1x1nPk1` en estado READY (SHA `1dd45fd`), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: la URL responde 200 tras 2 redirects y redirige a `vercel.com/login`. Hace falta iniciar sesión en Vercel para verla.
 **Métrica esperada**: ↑ tiempo en página / ↓ rebote (scroll más pausado invita a leer testimonios, la última capa de confianza antes del CTA de contacto). Proxy: profundidad de scroll hasta el Footer.
 **Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) y preview READY. Sin capturas: Chromium del host no arranca por libs de sistema y el cron no puede usar sudo.
+
+---
+
+## 2026-10-25 — Un solo camino para abrir la reserva
+
+**Principio**: Ley de Hick y coherencia de acciones — una sola función de entrada reduce ambigüedad y hace que todos los CTA lleven al mismo flujo.
+**Por qué**: ítem #8 del backlog (H15). Los CTA "Reservar" del header y del hero limpiaban el servicio seleccionado con `null`, pero `BookingModal` solo renderiza cuando `selectedService` existe; por eso ese flujo terminaba sin modal visible. Servicios ya enviaba el servicio correcto. Ahora `openBooking(service = null)` decide el contexto en un solo punto y deja explícito el fallback sin servicio, listo para que el modal pueda ofrecerlo.
+**Cambios** (1 archivo, +4/-6): `src/app/page.tsx` — `openBooking()` centraliza la apertura del modal; los wrappers de Hero/Header y Servicios conservan sus firmas públicas.
+**Rama**: mejora-diaria/2026-10-25
+**Preview**: pendiente de confirmar tras el push.
+**Métrica esperada**: ↑ aperturas del `BookingModal` desde header y hero; proxy: clics en Reservar por sesión y paso a fecha/hora.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
