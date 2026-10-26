@@ -39,10 +39,12 @@ export function StickyWhatsApp() {
                 className="absolute bottom-16 right-0 bg-brand-white rounded-xl shadow-2xl p-4 mb-2 w-64 border border-brand-dark/10"
               >
                 <button
+                  type="button"
                   onClick={() => setIsExpanded(false)}
+                  aria-label="Cerrar mensaje"
                   className="absolute top-2 right-2 p-1 hover:bg-brand-light rounded-full"
                 >
-                  <X className="w-4 h-4 text-brand-dark/40" />
+                  <X className="w-4 h-4 text-brand-dark/40" aria-hidden="true" />
                 </button>
                 <p className="text-sm text-brand-dark/70 pr-6">
                   Hola! Tienes alguna pregunta? Escribenos por WhatsApp y te ayudamos a agendar tu cita.
@@ -62,14 +64,17 @@ export function StickyWhatsApp() {
 
           {/* Main button */}
           <motion.button
+            type="button"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Cerrar chat de WhatsApp' : 'Abrir chat de WhatsApp'}
             className="w-14 h-14 bg-brand-dark rounded-full shadow-2xl flex items-center justify-center text-white hover:bg-brand-muted transition-colors relative"
           >
-            <MessageCircle className="w-7 h-7" />
+            <MessageCircle className="w-7 h-7" aria-hidden="true" />
             {/* Pulse animation */}
-            <span className="absolute w-full h-full bg-brand-dark rounded-full animate-ping opacity-20" />
+            <span className="absolute w-full h-full bg-brand-dark rounded-full animate-ping opacity-20" aria-hidden="true" />
           </motion.button>
         </motion.div>
       )}

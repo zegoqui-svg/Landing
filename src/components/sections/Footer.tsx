@@ -32,17 +32,19 @@ export function Footer() {
                 href={businessInfo.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram de SILUEL (abre en una pestaña nueva)"
                 className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:bg-brand-warm hover:text-brand-dark transition-all duration-300 transform hover:-translate-y-1"
               >
-                <Instagram className="w-5 h-5" />
+                <Instagram className="w-5 h-5" aria-hidden="true" />
               </a>
               <a
                 href={businessInfo.facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Facebook de SILUEL (abre en una pestaña nueva)"
                 className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:bg-brand-warm hover:text-brand-dark transition-all duration-300 transform hover:-translate-y-1"
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className="w-5 h-5" aria-hidden="true" />
               </a>
             </div>
           </div>

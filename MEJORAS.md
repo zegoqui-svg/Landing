@@ -141,3 +141,30 @@ Ninguna sección adyacente comparte ya la misma suma vertical, así que el scrol
 **Preview**: https://spa-landing-pw47xcktd-zegoqui-svgs-projects.vercel.app — deployment `dpl_2pCKXkV1xG4JjPYf9GVHeS2wgzMc` READY (SHA `ca02e49`, `target` ≠ production), pero el proyecto tiene `ssoProtection: all_except_custom_domains`: la URL redirige a `vercel.com/login`; hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↑ aperturas del `BookingModal` desde header y hero; proxy: clics en Reservar por sesión y paso a fecha/hora.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
+
+---
+
+## 2026-10-26 — Nombre accesible en botones e iconos solos (WCAG 4.1.2)
+
+**Principio**: Nombre, rol y valor (WCAG 2.1 §4.1.2) — un control que solo muestra un icono no tiene nombre accesible; el lector de pantalla lo anuncia como "botón" a secas y la persona usuaria de technology assistiva no sabe qué hace.
+**Por qué**: ítem #10 del backlog (H12 del diagnóstico), que señalaba explícitamente a `StickyWhatsApp` como ejemplo. La revisión del código encontró **cinco** controles sin nombre accesible, no uno:
+| control | archivo | nombre accesible |
+|---|---|---|
+| X de cierre del modal (con título) | `ui/Modal.tsx` | "Cerrar" |
+| X de cierre del modal (sin título) — **el que usa `BookingModal`** | `ui/Modal.tsx` | "Cerrar" |
+| X del globo de WhatsApp expandido | `StickyWhatsApp.tsx` | "Cerrar mensaje" |
+| botón principal de WhatsApp (sin texto alguno) | `StickyWhatsApp.tsx` | "Abrir chat de WhatsApp" / "Cerrar chat de WhatsApp" |
+| enlaces de Instagram y Facebook (solo icono) | `sections/Footer.tsx` | "Instagram de SILUEL (abre en una pestaña nueva)" |
+
+`BookingModal` abre el `Modal` **sin `title`**, así que la ruta que de verdad usa la aplica nunca vio el botón de la cabecera con `<h3>`: el cierre real era el botón flotante sin título, el que quedaba completamente mudo. En el Header el botón de menú sí tenía `aria-label="Menú"`, pero fijo: al abrirlo seguía diciendo "Menú" en vez de "Cerrar menú", y el `aria-expanded` ya no describía la acción.
+**Cambios** (4 archivos, +21/-9, solo atributos ARIA y `type="button"` — cero cambios visuales):
+- `ui/Modal.tsx`: `aria-label="Cerrar"` en las dos X + `type="button"` + `aria-hidden` en el icono.
+- `StickyWhatsApp.tsx`: `aria-label` en las dos X y en el botón principal, con etiqueta **dinámica** según `isExpanded` (antes la acción cambiaba, el nombre no), más `aria-expanded={isExpanded}` para que el estado del globo sea anunciable; `aria-hidden` en el icono y en el halo del pulso.
+- `sections/Footer.tsx`: `aria-label` en los enlaces sociales de solo icono (con aviso de "abre en una pestaña nueva", por abrir en `target="_blank"`).
+- `sections/Header.tsx`: `aria-label` del botón de menú pasa a "Abrir menú" / "Cerrar menú" según estado; `type="button"` y `aria-hidden` en el `<svg>` inline.
+- `type="button"` en todos ellos: sin esto, dentro de un `<form>` el botón envía el formulario en vez de cerrar la ventana.
+**Medido**: en el HTML generado (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios) aparecen `aria-label="Abrir menú"`, `aria-label="Instagram de SILUEL…"` y `aria-label="Facebook de SILUEL…"`. Los cuatro controles de cliente (modal y WhatsApp, renderizados en el cliente) quedaron verificados en los chunks: `"Cerrar"` ×2, `"Cerrar mensaje"`, `"Abrir chat de WhatsApp"`, `"Cerrar chat de WhatsApp"`. Auditoría sobre el HTML servido: **ningún `<button>` sin nombre** — los que quedan sin `aria-label` son todos con texto visible dentro, que es el caso correcto.
+**Rama**: mejora-diaria/2026-10-26
+**Preview**: pendiente de confirmar tras el push (el proyecto `spa-landing` tiene `ssoProtection: all_except_custom_domains`: las previews redirigen a `vercel.com/login` y hace falta iniciar sesión en Vercel para verlas).
+**Métrica esperada**: ↑ tasa de finalización del flujo de reserva con lector de pantalla y con teclado (el botón de cierre del modal es el único camino de salida); ↓ errores de "elemento sin nombre" en auditoría axe/Lighthouse. Sin analytics de a11y, la métrica es cualitativa hasta tener un baseline.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde.

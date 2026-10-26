@@ -56,12 +56,13 @@ export function Header({ onBookClick }: HeaderProps) {
           <div className="md:hidden flex items-center gap-2">
             {renderBook()}
             <button
+              type="button"
               className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Menú"
+              aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
               aria-expanded={isMenuOpen}
             >
-              <svg className="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 {isMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (

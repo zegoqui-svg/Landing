@@ -50,10 +50,12 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <h3 className="text-xl font-semibold text-gray-900 font-serif">{title}</h3>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Cerrar"
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -66,10 +68,12 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
         {/* Close button for modals without title */}
         {!title && (
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Cerrar"
             className="absolute top-4 right-4 p-2 hover:bg-black/10 rounded-full transition-colors z-10 bg-white/50"
           >
-            <X className="w-5 h-5 text-gray-700" />
+            <X className="w-5 h-5 text-gray-700" aria-hidden="true" />
           </button>
         )}
       </div>
