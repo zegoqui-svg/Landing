@@ -7,7 +7,7 @@ import { Quote, Award, CheckCircle } from 'lucide-react';
 
 export function ExpertProfile() {
   return (
-    <section className="pt-28 pb-24 bg-white relative overflow-hidden">
+    <section id="experta" className="scroll-mt-20 pt-28 pb-24 bg-white relative overflow-hidden">
       {/* Decorative background element */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-brand-warm/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-muted/5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />

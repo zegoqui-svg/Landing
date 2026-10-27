@@ -165,6 +165,13 @@ export const businessInfo = {
   address: 'Plan de Ayala 1859 INT 28',
   city: 'Guadalajara, Jalisco, México',
   phone: '33 3965 7478',
+  /**
+   * Mismo numero ya publicado en `phone` / `whatsappNumber`, en formato E.164
+   * (+52 pais + 33 Guadalajara + 39657478). Se deriva de los datos publicados,
+   * no es un numero nuevo. Sirve para que el `tel:` del footer abra el marcador
+   * del telefono en vez de redirigir a WhatsApp.
+   */
+  phoneE164: '+523339657478',
   email: 'gomezelsa806@gmail.com',
   facebookUrl: 'https://www.facebook.com/profile.php?id=100091949245186',
   instagramUrl: 'https://www.instagram.com/siluel_guadalajara/', // Placeholder based on brand

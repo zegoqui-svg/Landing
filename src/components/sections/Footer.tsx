@@ -1,13 +1,11 @@
 'use client';
 
-import { whatsappNumber, businessInfo } from '@/src/data';
+import { businessInfo } from '@/src/data';
 import { Phone, Mail, MapPin, Instagram, Facebook, Clock, Sparkles } from 'lucide-react';
 
 export function Footer() {
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Hola%20SILUEL,%20me%20interesa%20agendar%20una%20cita`;
-
   return (
-    <footer className="bg-brand-dark text-white relative overflow-hidden">
+    <footer id="contacto" className="scroll-mt-20 bg-brand-dark text-white relative overflow-hidden">
       {/* Premium touch: Gold top border */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-warm to-transparent opacity-50" />
 
@@ -87,7 +85,7 @@ export function Footer() {
               </li>
               <li className="flex items-center">
                 <Phone className="w-5 h-5 mr-3 text-brand-warm" />
-                <a href={whatsappUrl} className="text-sm hover:text-white transition-colors">
+                <a href={`tel:${businessInfo.phoneE164}`} className="text-sm hover:text-white transition-colors">
                   {businessInfo.phone}
                 </a>
               </li>
