@@ -168,3 +168,39 @@ Ninguna sección adyacente comparte ya la misma suma vertical, así que el scrol
 **Preview**: https://spa-landing-rlewlxxxn-zegoqui-svgs-projects.vercel.app — **deployment del commit de código** `dpl_JAtMAdcwuT1S3hd9pqHXAPYuJbbM` (SHA `fb2aafe`), READY, `target` ≠ production, rama de producción = `main` sin tocar. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login`; hace falta iniciar sesión en Vercel para ver la página. Cada push a la rama genera un deployment con su propia URL pero **el mismo código** (los commits posteriores a `fb2aafe` solo tocan `MEJORAS.md`); el del HEAD final `cd1fdf4` es `dpl_DLnt4EESkKa8SMkzTqMMj26hCtPS` → https://spa-landing-73enymvl0-zegoqui-svgs-projects.vercel.app
 **Métrica esperada**: ↑ tasa de finalización del flujo de reserva con lector de pantalla y con teclado (el botón de cierre del modal es el único camino de salida); ↓ errores de "elemento sin nombre" en auditoría axe/Lighthouse. Sin analytics de a11y, la métrica es cualitativa hasta tener un baseline.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde.
+
+---
+
+## 2026-10-27 — El teléfono llama, y los enlaces de navegación llegan a algún lado
+
+**Principio**: Afordancia y navegación honesta (NN/g: un enlace debe llevar a donde promete; progressive enhancement) — cada vía de contacto debe entregar lo que su etiqueta anuncia.
+**Por qué**: auditoría del código de las rutas de contacto. Se encontraron **cinco enlaces muertos o mal cableados**, todos en el camino crítico de conversión:
+| enlace | archivo | antes | ahora |
+|---|---|---|---|
+| Teléfono visible "33 3965 7478" | `sections/Footer.tsx` | `href="https://wa.me/…"` — abriría **WhatsApp**, no el marcador | `href="tel:+523339657478"` |
+| "Contacto" (nav desktop + móvil) | `sections/Header.tsx` | `/#contacto` → **no existía ningún `id="contacto"`** | apunta al footer, que ya tiene `id="contacto"` |
+| "Reservar" (fallback sin `onBookClick`) | `sections/Header.tsx` | `/#contacto` → mismo ancla muerta | idem |
+| "Nuestra Experta" | `sections/Footer.tsx` | `#experta` → **no existía** | `id="experta"` en `ExpertProfile` |
+| "Experiencias" | `sections/Footer.tsx` | `#testimonios` → **no existía** | `id="testimonios"` en `Testimonials` |
+Solo `#servicios` tenía `id`. Además **no existía ni un solo `tel:` en todo el sitio**: el número publicado nunca fue marcable, y quien lo tocaba acababa en un chat de WhatsApp en lugar de una llamada.
+**Cambios** (5 archivos, +13/-8):
+- `src/data/index.ts`: `businessInfo.phoneE164 = '+523339657478'`, derivado del mismo número ya publicado en `phone` ("33 3965 7478") y en `whatsappNumber` ("523339657478") — **no es un dato nuevo**, solo el mismo número en formato E.164 para el `tel:`.
+- `src/components/sections/Footer.tsx`: el teléfono pasa a `tel:`; el `<footer>` recibe `id="contacto"`; se elimina la variable `whatsappUrl` (quedó sin uso) y el import de `whatsappNumber`.
+- `src/components/sections/ExpertProfile.tsx`: `id="experta"`.
+- `src/components/sections/Testimonials.tsx`: `id="testimonios"`.
+- `src/components/sections/Services.tsx`: `scroll-mt-20` a `#servicios`.
+- `scroll-mt-20` (`scroll-margin-top: 5rem`) en las cuatro anclas: el header es `fixed` (≈64 px) y sin esto el destino del salto queda tapado bajo la barra.
+**Medido** (sobre el HTML generado del build local, `.next/server/app/index.html`): aparece `href="tel:+523****7478"`, los cuatro `id` (`servicios`, `experta`, `testimonios`, `contacto`) y 4 apariciones de `scroll-mt-20`; Tailwind generó `.scroll-mt-20{scroll-margin-top:5rem}`. Cero coincidencias de `wa.me` en el footer. El JSON-LD de `layout.tsx` ya traía el teléfono completo (verificado con `od -c` sobre el archivo y sobre `git show HEAD:`) — no hizo falta tocarlo.
+**Nota de auditoría**: la salida de `grep`/`sed` en este entorno **enmascara los dígitos de teléfono** como `+523****7478`. Parece un placeholder enmascarado en el código, pero `od -c` revela que en el disco son los dígitos completos. No confundir: el enmascarado es de la capa de salida, no del archivo.
+**Rama**: mejora-diaria/2026-10-27
+**Preview**: https://spa-landing-bu7k27gxq-zegoqui-svgs-projects.vercel.app — deployment del commit de código `dpl_5hHQQaVsS5MBDPyNQAhQjdjukHiM` (SHA `0a558b9`), READY, `target` ≠ production, rama de producción = `main` sin tocar. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página.
+**Métrica esperada**: ↑ clics en "Contacto" que completan el salto (proxy: navegaciones a la sección de contacto en Vercel Analytics) y ↑ llamadas iniciadas desde el footer (proxy: clics en `tel:`). ↑ sesiones que llegan al footer; ↓ rebote en la sección de contacto.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Compilado con `NODE_OPTIONS=--max-old-space-size=900` porque la máquina tenía solo ~740 MiB libres (`llama-server` de 2,8 GB + Chromium de sesiones ajenas); el build salió verde al primer intento sin tocar ningún servicio. Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue sobre el HTML y el CSS generados.
+
+### Hallazgo colateral (NO corregido hoy) — el CTA "Reservar" del Header y del Hero no abre el modal
+Al auditar las rutas de contacto se encontró un bug de conversión **más grave que el corregido hoy**, que queda para la próxima corrida:
+- `src/components/ui/BookingModal.tsx:190` → `if (!selectedService) return null;`. El modal **no se renderiza** sin servicio preseleccionado.
+- `src/components/ui/BookingModal.tsx:115` → `if (!selectedService) return;` corta el envío.
+- El Header y el Hero llaman `openBooking(null)` (`page.tsx:18`, `handleBookClick`). O sea: **los botones "Reservar" del header y del hero — el CTA principal del sitio — no abren nada**. Solo el flujo de Servicios (que sí pasa un servicio) llega al modal.
+- El paso 1 del modal (`BookingModal.tsx:230-249`) es una **tarjeta de confirmación** del servicio, no un selector, así que el arreglo no es solo quitar el `return null`: hay que ofrecer una lista de servicios published en `src/data/index.ts` cuando `selectedService` es `null`.
+Esto contradice la nota de la entrada del 2026-10-25 ("deja explícito el fallback sin servicio, listo para que el modal pueda ofrecerlo"): el fallback quedó implementado en `page.tsx`, pero **el modal nunca llegó a ofrecerlo**. Registrado como **prioridad 1** en el backlog (#13).
