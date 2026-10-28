@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Service } from '@/src/types';
-import { whatsappNumber } from '@/src/data';
+import { services, whatsappNumber } from '@/src/data';
 import { Check, Calendar, Clock, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 
 interface BookingModalProps {
@@ -30,6 +30,14 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  // Servicio elegido dentro del modal. Arranca en el servicio preseleccionado
+  // (flujo de Servicios) o en null (CTA "Reservar" del header y del hero).
+  // Cuando es null el paso 1 muestra el selector de servicios, de modo que el
+  // CTA principal del sitio tiene un camino de reserva completo.
+  const [chosenService, setChosenService] = useState<Service | null>(selectedService);
+  // Sin servicio elegido -> el paso 1 es el selector. Se deriva del estado, sin
+  // efectos, para que el primer render (SSR e hidratación) ya sea el correcto.
+  const isPicking = chosenService === null;
 
   const upcomingDays = useMemo(() => {
     const days = [];
@@ -63,6 +71,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
     setPhone('');
     setEmail('');
     setErrorMessage('');
+    setChosenService(null);
     onClose();
   };
 
@@ -112,7 +121,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
       return;
     }
 
-    if (!selectedService) return;
+    if (!chosenService) {
+      setErrorMessage('Elige un servicio para continuar');
+      setStep('service');
+      return;
+    }
 
     setStep('submitting');
 
@@ -125,7 +138,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
           name: name.trim(),
           phone: phone.trim(),
           email: email.trim(),
-          service: selectedService.id,
+          service: chosenService.id,
           preferredDate: date,
           preferredTime: time,
         }),
@@ -138,7 +151,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
       }
 
       // Track lead conversion after successful API call
-      trackLeadConversion(selectedService?.name || 'unknown', { name, phone, email, service: selectedService?.id });
+      trackLeadConversion(chosenService.name, { name, phone, email, service: chosenService.id });
 
       setStep('success');
 
@@ -155,9 +168,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         : null;
 
       let message = `Hola SILUEL, me gustaría agendar una cita`;
-      
-      if (selectedService) {
-        message += ` para *${selectedService.name}*`;
+
+      if (chosenService) {
+        message += ` para *${chosenService.name}*`;
       }
       
       if (formattedDate) {
@@ -186,8 +199,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
       setStep('error');
     }
   };
-
-  if (!selectedService) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="xl">
@@ -226,27 +237,67 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         </div>
 
         <div className="p-6">
-          {/* STEP 1: Service Confirmation */}
-          {step === 'service' && (
+          {/* STEP 1a: selector de servicio (CTA "Reservar" sin servicio preseleccionado) */}
+          {step === 'service' && isPicking && !chosenService && (
             <div className="space-y-6">
               <div className="bg-brand-white rounded-xl p-6 shadow-sm">
-                <div className="flex items-start space-x-4">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
-                      src={selectedService.image}
-                      alt={selectedService.name}
-                      width={80}
-                      height={80}
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-semibold text-brand-dark font-serif mb-1">{selectedService.name}</h4>
-                    <p className="text-brand-dark/60 text-sm">{selectedService.description}</p>
+                <h4 className="text-xl font-semibold text-brand-dark font-serif mb-1">¿Qué te gustaría reservar?</h4>
+                <p className="text-brand-dark/60 text-sm">Elige el tratamiento para tu cita.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {services.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    onClick={() => {
+                      setChosenService(service);
+                    }}
+                    className="flex items-center gap-3 text-left bg-brand-white rounded-xl p-3 shadow-sm border border-brand-dark/10 hover:border-brand-warm/40 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-warm/20"
+                  >
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                      <Image
+                        src={service.image}
+                        alt={service.name}
+                        width={56}
+                        height={56}
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h5 className="font-semibold text-brand-dark text-sm leading-snug">{service.name}</h5>
+                      <p className="text-brand-dark/60 text-xs line-clamp-2 mt-1">{service.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 1b: confirmación del servicio (con servicio preseleccionado o ya elegido) */}
+          {step === 'service' && !(isPicking && !chosenService) && (
+            <div className="space-y-6">
+              {chosenService && (
+                <div className="bg-brand-white rounded-xl p-6 shadow-sm">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                      <Image
+                        src={chosenService.image}
+                        alt={chosenService.name}
+                        width={80}
+                        height={80}
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-xl font-semibold text-brand-dark font-serif mb-1">{chosenService.name}</h4>
+                      <p className="text-brand-dark/60 text-sm">{chosenService.description}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="bg-brand-white rounded-xl p-6 shadow-sm">
                 <h5 className="font-semibold text-brand-dark mb-4">Qué incluye</h5>
@@ -264,6 +315,16 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 Continuar
                 <Calendar className="w-5 h-5 ml-2" />
               </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setChosenService(null);
+                }}
+                className="w-full text-center text-sm text-brand-dark/70 hover:text-brand-dark underline underline-offset-4 min-h-[44px]"
+              >
+                Cambiar el servicio
+              </button>
             </div>
           )}
 

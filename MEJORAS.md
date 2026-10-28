@@ -204,3 +204,36 @@ Al auditar las rutas de contacto se encontró un bug de conversión **más grave
 - El Header y el Hero llaman `openBooking(null)` (`page.tsx:18`, `handleBookClick`). O sea: **los botones "Reservar" del header y del hero — el CTA principal del sitio — no abren nada**. Solo el flujo de Servicios (que sí pasa un servicio) llega al modal.
 - El paso 1 del modal (`BookingModal.tsx:230-249`) es una **tarjeta de confirmación** del servicio, no un selector, así que el arreglo no es solo quitar el `return null`: hay que ofrecer una lista de servicios published en `src/data/index.ts` cuando `selectedService` es `null`.
 Esto contradice la nota de la entrada del 2026-10-25 ("deja explícito el fallback sin servicio, listo para que el modal pueda ofrecerlo"): el fallback quedó implementado en `page.tsx`, pero **el modal nunca llegó a ofrecerlo**. Registrado como **prioridad 1** en el backlog (#13).
+
+---
+
+## 2026-10-28 — El CTA "Reservar" del header y del hero ya abre el modal
+
+**Principio**: Reduce la fricción del camino principal (NN/g: menos pasos para la acción dominante; Ley de Hick aplicada al flujo de conversión) — el CTA principal del sitio no puede terminar en un callejón sin salida; y honestidad de estado: el modal muestra lo que el usuario pidió, no una pantalla vacía.
+**Por qué**: ítem #13 del backlog, **prioridad 1**, y el hallazgo colateral que la entrada del 2026-10-27 dejó anotado. El bug era real y estaba en el camino crítico de conversión: `BookingModal.tsx` hacía `if (!selectedService) return null;`, de modo que el Header y el Hero — que llaman `openBooking(null)` (`page.tsx:18`) — **no abrían nada**. Solo el flujo de Servicios (que sí pasa un servicio) llegaba al modal. Además el `handleSubmit` cortaba en seco (`if (!selectedService) return;`), así que el flujo sin servicio no solo no abría: si se llegaba al paso 2, el envío moría en silencio.
+**Cambios** (1 archivo, +87/-26, solo `src/components/ui/BookingModal.tsx`):
+- Se elimina el guard `if (!selectedService) return null;`: el modal ahora se renderiza siempre que `isOpen`.
+- Nuevo estado interno `chosenService` (inicializa en `selectedService`) y `isPicking` **derivado** (`chosenService === null`) en vez de estado con `useEffect`. La derivación es deliberada: un `useEffect` que fija el estado en `isOpen` hace que el primer render (SSR e hidratación) muestre la rama equivocada. Con estado derivado, el primer render ya es el correcto y no hay desajuste de hidratación.
+- Paso 1 del modal tiene ahora dos modos:
+  - **Sin servicio** (CTA del header/hero): un selector con las **9** tarjetas de servicio de `src/data/index.ts` (miniatura `next/image` 56 px, nombre y descripción con `line-clamp-2`), en grid de 1 columna en móvil y 2 en `sm`.
+  - **Con servicio** (flujo de Servicios): la tarjeta de confirmación y la lista "Qué incluye" que ya existían, sin cambios visuales.
+- Botón "Cambiar el servicio" (nuevo, `min-h-[44px]`) en la rama de confirmación: devuelve al selector. Así el modal nunca atrapa al usuario en un servicio que no quiere.
+- `handleSubmit`, el cuerpo del POST a `/api/leads` (`service: chosenService.id`), el evento `lead_captured`/`fbq('track','Lead')` y el mensaje de WhatsApp pasan a usar `chosenService`. Si aun así no hay servicio, ahora **falla de forma visible** ("Elige un servicio para continuar") en vez de cortar en silencio.
+- `handleClose` limpia `chosenService` para que la siguiente apertura arranque en el contexto correcto.
+**Medido** (render SSR real del componente con los dos contextos, sobre el HTML generado del build; se eliminaron los payloads RSC para aislar el DOM):
+| | sin servicio (`openBooking(null)`) | con servicio (flujo de Servicios) |
+|---|---|---|
+| heading "¿Qué te gustaría reservar?" | **1** | 0 |
+| "Elige el tratamiento para tu cita" | **1** | 0 |
+| grid de servicios (`grid-cols-1 sm:grid-cols-2`) | **1** | 0 |
+| miniaturas de servicio (`sizes="56px"`) | **9** | 0 |
+| servicios nombrados | **9/9** | 1 (solo el elegido) |
+| tarjeta "Qué incluye" | **0** | 1 |
+| imagen de confirmación (`sizes="80px"`) | 0 | **1** (Maderoterapia) |
+| "Cambiar el servicio" | 0 | **1** |
+| botón "Continuar" | 0 | **1** |
+Se confirmó también que el guard `if (!selectedService) return null` ya no existe en el archivo. La página de verificación (`src/app/verify-modal/`) se usó solo como banco de pruebas y **se eliminó antes del commit**: el diff final es de un solo archivo.
+**Rama**: mejora-diaria/2026-10-28
+**Preview**: pendiente de confirmar tras el push (ver estado).
+**Métrica esperada**: ↑ aperturas del `BookingModal` desde el CTA del header y del hero (hoy son clics que no abren nada, así que el baseline es 0); ↑ leads por visita; ↓ rebote en el CTA principal. Proxy: eventos `lead_captured` con `lead_source: booking_modal` frente al total de clics en "Reservar".
+**Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
