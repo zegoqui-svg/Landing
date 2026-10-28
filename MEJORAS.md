@@ -234,6 +234,6 @@ Esto contradice la nota de la entrada del 2026-10-25 ("deja explícito el fallba
 | botón "Continuar" | 0 | **1** |
 Se confirmó también que el guard `if (!selectedService) return null` ya no existe en el archivo. La página de verificación (`src/app/verify-modal/`) se usó solo como banco de pruebas y **se eliminó antes del commit**: el diff final es de un solo archivo.
 **Rama**: mejora-diaria/2026-10-28
-**Preview**: pendiente de confirmar tras el push (ver estado).
+**Preview**: https://spa-landing-5hvkkd5j8-zegoqui-svgs-projects.vercel.app — deployment `dpl_iurE6ZpDPP1pp6RVW5R6ZN4HLokG` en estado READY (SHA `1348e12`, `target` ≠ production, rama de producción = `main` sin tocar). El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↑ aperturas del `BookingModal` desde el CTA del header y del hero (hoy son clics que no abren nada, así que el baseline es 0); ↑ leads por visita; ↓ rebote en el CTA principal. Proxy: eventos `lead_captured` con `lead_source: booking_modal` frente al total de clics en "Reservar".
 **Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
