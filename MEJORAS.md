@@ -247,6 +247,6 @@ Se confirmó también que el guard `if (!selectedService) return null` ya no exi
 **Cambios** (1 archivo, +6/-3, solo `src/components/sections/Footer.tsx`): los tres enlaces muertos se eliminan y el bloque de enlaces del pie pasa a "Contacto" (`tel:` con `businessInfo.phoneE164`) y "Experiencias" (`#testimonios`). Cero cambios visuales en el resto del footer; no se agregan dependencias ni material nuevo.
 **Medido** (sobre el HTML generado del build local, `.next/server/app/index.html`): "Legal", "Cookies" y "Privacidad" aparecen **0 veces**; `href="#testimonios"` aparece 2 veces (nav + footer) y `href="tel:` 2 veces (datos de contacto + footer). `git diff --check` sin observaciones.
 **Rama**: mejora-diaria/2026-10-29
-**Preview**: pendiente — ver sección de estado.
+**Preview**: https://spa-landing-hcco1qckg-zegoqui-svgs-projects.vercel.app — deployment `dpl_3NUEodsExkpKKddEppk6B5TnTXKu` en estado READY (SHA `a846654`, `target` ≠ production, rama de producción = `main` sin tocar). El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`**; hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↓ clics en enlaces sin destino (proxy: clics salientes con URL vacía en Vercel Analytics); ↑ clics en "Contacto" y "Experiencias" desde el footer; ↑ llamadas iniciadas vía `tel:`.
-**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo.
