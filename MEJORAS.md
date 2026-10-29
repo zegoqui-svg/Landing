@@ -237,3 +237,16 @@ Se confirmó también que el guard `if (!selectedService) return null` ya no exi
 **Preview**: https://spa-landing-5hvkkd5j8-zegoqui-svgs-projects.vercel.app — deployment `dpl_iurE6ZpDPP1pp6RVW5R6ZN4HLokG` en estado READY (SHA `1348e12`, `target` ≠ production, rama de producción = `main` sin tocar). El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↑ aperturas del `BookingModal` desde el CTA del header y del hero (hoy son clics que no abren nada, así que el baseline es 0); ↑ leads por visita; ↓ rebote en el CTA principal. Proxy: eventos `lead_captured` con `lead_source: booking_modal` frente al total de clics en "Reservar".
 **Estado**: 🔎 en revisión — build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
+
+---
+
+## 2026-10-29 — El pie de página ya no promete políticas que no existen
+
+**Principio**: honestidad de navegación (NN/g: un enlace debe llevar a donde anuncia) — un enlace a `#` promete una política legal y no entrega nada; es peor que no ofrecerlo.
+**Por qué**: ítem #12 del backlog. `Footer.tsx` mostraba tres enlaces al pie — "Legal", "Cookies" y "Privacidad" — con `href="#"`, es decir, tres enlaces muertos en la última línea que el usuario ve. No hay documentos legales publicados en el repo, así que no se inventaron URLs ni se crearon páginas vacías: se quitaron los enlaces que no tienen destino real y se sustituyeron por dos acciones que sí llevan a alguna parte — "Contacto" (marcador del teléfono ya publicado) y "Experiencias" (ancla de testimonios).
+**Cambios** (1 archivo, +6/-3, solo `src/components/sections/Footer.tsx`): los tres enlaces muertos se eliminan y el bloque de enlaces del pie pasa a "Contacto" (`tel:` con `businessInfo.phoneE164`) y "Experiencias" (`#testimonios`). Cero cambios visuales en el resto del footer; no se agregan dependencias ni material nuevo.
+**Medido** (sobre el HTML generado del build local, `.next/server/app/index.html`): "Legal", "Cookies" y "Privacidad" aparecen **0 veces**; `href="#testimonios"` aparece 2 veces (nav + footer) y `href="tel:` 2 veces (datos de contacto + footer). `git diff --check` sin observaciones.
+**Rama**: mejora-diaria/2026-10-29
+**Preview**: pendiente — ver sección de estado.
+**Métrica esperada**: ↓ clics en enlaces sin destino (proxy: clics salientes con URL vacía en Vercel Analytics); ↑ clics en "Contacto" y "Experiencias" desde el footer; ↑ llamadas iniciadas vía `tel:`.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios).

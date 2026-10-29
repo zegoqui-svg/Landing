@@ -103,9 +103,12 @@ export function Footer() {
             &copy; 2026 {businessInfo.fullName}. Crafted for ultimate wellness.
           </p>
           <div className="flex space-x-8 mt-6 md:mt-0">
-            <a href="#" className="hover:text-brand-warm transition-colors">Legal</a>
-            <a href="#" className="hover:text-brand-warm transition-colors">Cookies</a>
-            <a href="#" className="hover:text-brand-warm transition-colors">Privacidad</a>
+            <a href={`tel:${businessInfo.phoneE164}`} className="hover:text-brand-warm transition-colors">
+              Contacto
+            </a>
+            <a href="#testimonios" className="hover:text-brand-warm transition-colors">
+              Experiencias
+            </a>
           </div>
         </div>
       </div>
