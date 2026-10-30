@@ -250,3 +250,33 @@ Se confirmó también que el guard `if (!selectedService) return null` ya no exi
 **Preview**: https://spa-landing-hcco1qckg-zegoqui-svgs-projects.vercel.app — deployment `dpl_3NUEodsExkpKKddEppk6B5TnTXKu` en estado READY (SHA `a846654`, `target` ≠ production, rama de producción = `main` sin tocar). El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`**; hace falta iniciar sesión en Vercel para ver la página.
 **Métrica esperada**: ↓ clics en enlaces sin destino (proxy: clics salientes con URL vacía en Vercel Analytics); ↑ clics en "Contacto" y "Experiencias" desde el footer; ↑ llamadas iniciadas vía `tel:`.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo.
+
+---
+
+## 2026-10-30 — El modal deja de prometer lo que no está publicado
+
+**Principio**: honestidad de marca (NN/g "Honest UX") — un bloque que se presenta como dato específico de cada tratamiento pero dice lo mismo para los nueve es contenido decorativo que además promete algo que la marca puede no cumplir; la información que sí se publica vale más que la que se inventa.
+**Por qué**: auditoría de las cadenas de contenido del repo (no había ítem de backlog que encajara: el #4 sigue bloqueado por falta de la URL real de Google Reviews y el #7 por falta de material filmado). Al revisar `src/components/ui/BookingModal.tsx` se encontró un bloque "Qué incluye" que **no existe en ninguna fuente**: `src/data/index.ts` no publica un campo `includes`, el tablero `siluel` no lo tiene y la bóveda no lo menciona. Las cinco promesas —"Evaluación inicial personalizada", "Tratamiento completo del servicio", "Aromaterapia personalizada", "Bebida de bienvenida", "Consejos post-tratamiento"— eran un array hardcodeado **idéntico para los 9 servicios**, mostrado justo debajo de la tarjeta de confirmación del servicio, es decir, con apariencia de dato propio de cada tratamiento. Una clienta que reserva "Post-operatorio" o "Drenaje Linfático" leía que su sesión incluye una "Bebida de bienvenida" y "Aromaterapia personalizada": promesas que la marca nunca publicó (regla dura #4).
+**Cambios** (1 archivo, +26/-11, solo `src/components/ui/BookingModal.tsx`):
+- Se elimina el array de cinco promesas inventadas y el heading "Qué incluye".
+- El bloque pasa a **"En qué consiste tu tratamiento"** y muestra la **categoría publicada** del servicio elegido (título + descripción de `serviceCategories` en `src/data/index.ts`): por ejemplo, para Post-operatorio → "Recuperación — Cuidado especializado post-operatorio y drenaje linfático". Es información real, distinta por servicio y ya publicada en el repo.
+- `chosenCategory` se **deriva** (`serviceCategories.find(c => c.id === chosenService.category)`), no se fija en estado: mismo criterio que `isPicking` del 2026-10-28, para que el primer render (SSR e hidratación) ya sea el correcto.
+- El bloque solo se monta si hay servicio y categoría (`chosenService && chosenCategory`), así que nunca queda un encabezado sin contenido debajo.
+- Import de `serviceCategories` añadido a `src/data`.
+**Medido** (render SSR real del componente con `post-operatorio` preseleccionado, sobre el HTML generado del build, aislando el DOM de los payloads RSC):
+| | antes | después |
+|---|---|---|
+| heading del bloque | "Qué incluye" | "En qué consiste tu tratamiento" |
+| "Aromaterapia personalizada" | 1 | **0** |
+| "Bebida de bienvenida" | 1 | **0** |
+| "Evaluación inicial personalizada" | 1 | **0** |
+| "Consejos post-tratamiento" | 1 | **0** |
+| categoría publicada (Recuperación) | — | **1** |
+| descripción de la categoría | — | **1** ("Cuidado especializado post-operatorio y drenaje linfático") |
+| "Continuar" / "Cambiar el servicio" | 1 / 1 | 1 / 1 (flujo intacto) |
+En el HTML de la landing (`.next/server/app/index.html`) y en los chunks de cliente (`.next/static/chunks/`) las tres cadenas inventadas aparecen **0 veces**. Las 2 apariciones de "Qué incluye" que quedan en el HTML son del **FAQ JSON-LD** de `layout.tsx` ("¿Qué incluye el tratamiento post-operatorio?"), que es contenido publicado y no se tocó. Se comprobó que los 9 servicios resuelven su categoría (`corporal` ×4, `recovery` ×2, `facial` ×1, `masajes` ×2), y que `price` y `duration` están vacíos en los 9 — por eso no se publican. La página de verificación `src/app/verify-modal/` se eliminó antes del commit: el diff final es de un solo archivo.
+**Rama**: mejora-diaria/2026-10-30
+**Preview**: https://spa-landing-1pqpsqs4e-zegoqui-svgs-projects.vercel.app — deployment `dpl_62aeyi86dD5zE6NqzzCW6Jsrm5dk` del commit **de código** `a068831` (SHA `a068831790a8`, ref `mejora-diaria/2026-10-30`), estado READY, `target` ≠ production, rama de producción = `main` sin tocar. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página. (El commit de bitácora genera su propio deployment con otra URL, pero sirve el mismo código.)
+**Métrica esperada**: ↓ abandonment en el paso 1 del modal y ↑ confianza percibida: el bloque ya no hace promesas que SILUEL no puede respaldar. Proxy:↓ salidas por rebote justo después de abrir el modal (evento de apertura → paso 2 "Continuar"); ↑ completitud del flujo de reserva. Cualitativa hasta tener baseline de analítica por paso.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.3 GiB libres (por encima del gate de 2 GiB, bajo el de 2.56 GiB). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
+**Pendiente anotado**: los ítems #4 (link a reseñas de Google) y #7 (video en el Hero) siguen bloqueados por falta de material real — se necesitan la URL de Google Reviews y un video filmado de la sala/Elsa. No se inventaron.
