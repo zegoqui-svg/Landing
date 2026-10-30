@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Service } from '@/src/types';
-import { services, whatsappNumber } from '@/src/data';
+import { services, serviceCategories, whatsappNumber } from '@/src/data';
 import { Check, Calendar, Clock, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 
 interface BookingModalProps {
@@ -38,6 +38,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   // Sin servicio elegido -> el paso 1 es el selector. Se deriva del estado, sin
   // efectos, para que el primer render (SSR e hidratación) ya sea el correcto.
   const isPicking = chosenService === null;
+  // Categoria publicada del servicio elegido (`src/data/index.ts`), para el
+  // bloque "En que consiste tu tratamiento". Se deriva, no se fija en estado.
+  const chosenCategory = chosenService
+    ? serviceCategories.find(c => c.id === chosenService.category)
+    : undefined;
 
   const upcomingDays = useMemo(() => {
     const days = [];
@@ -299,17 +304,27 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 </div>
               )}
 
-              <div className="bg-brand-white rounded-xl p-6 shadow-sm">
-                <h5 className="font-semibold text-brand-dark mb-4">Qué incluye</h5>
-                <ul className="space-y-2">
-                  {['Evaluación inicial personalizada', 'Tratamiento completo del servicio', 'Aromaterapia personalizada', 'Bebida de bienvenida', 'Consejos post-tratamiento'].map((item, index) => (
-                    <li key={index} className="flex items-center text-brand-dark/60">
-                      <Check className="w-4 h-4 text-brand-muted mr-2 flex-shrink-0" />
-                      {item}
+              {/* En que consiste tu tratamiento.
+                  Solo se publica lo que ya esta en `src/data/index.ts`: la categoria
+                  del servicio (con su descripcion publicada). Antes este bloque
+                  mostraba cinco promesas identicas para los 9 servicios
+                  ("Aromaterapia personalizada", "Bebida de bienvenida", ...) que no
+                  constan en ninguna fuente del repo: era contenido inventado
+                  presentado como dato de cada tratamiento. */}
+              {chosenService && chosenCategory && (
+                <div className="bg-brand-white rounded-xl p-6 shadow-sm">
+                  <h5 className="font-semibold text-brand-dark mb-4">En qué consiste tu tratamiento</h5>
+                  <ul className="space-y-2">
+                    <li className="flex items-start text-brand-dark/60">
+                      <Check className="w-4 h-4 text-brand-muted mr-2 flex-shrink-0 mt-0.5" />
+                      <span>
+                        <span className="font-medium text-brand-dark/80">{chosenCategory.title}</span>
+                        {chosenCategory.description ? ` — ${chosenCategory.description}` : ''}
+                      </span>
                     </li>
-                  ))}
-                </ul>
-              </div>
+                  </ul>
+                </div>
+              )}
 
               <Button onClick={() => setStep('calendar')} fullWidth size="lg">
                 Continuar
