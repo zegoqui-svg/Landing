@@ -349,3 +349,23 @@ Los otros 10 excerpts de `src/data/blog.ts` se compararon campo por campo contra
 **Métrica esperada**: ↓ sensación de error/abandono en la tarjeta de Celulitis del blog (proxy: clics en "Leer más" de esa tarjeta vs. el resto del índice — la única que hoy mostraba copy en dos idiomas); en SEO, la eliminación de la etiqueta falsa **no** cambia el rastreo (no había sitio verificado que perder) y evita un token inválido en el `<head>` de las 19 páginas. Cualitativa: no se publica nada hasta que Sebastián responda "publica".
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, First Load JS 149 kB sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.3 GiB libres. Sin capturas: el Chromium del host no arranca por libs de sistema y no se usa sudo; la verificación fue sobre el HTML renderizado por el propio build de Next. La línea `[CRON_REPORT_ERROR] Dynamic server usage: Route /api/cron/report…` que aparece durante el build es informativa de una route dinámica (no es un fallo): el exit code es 0 y las 19/19 páginas se generaron.
 **Pendiente anotado** (sigue abierto, no se corrigió): `businessInfo.instagramUrl` conserva el comentario `// Placeholder based on brand`; Instagram sirve un shell JS igual para perfiles existentes e inexistentes, así que no se puede confirmar la cuenta. **No se quitó ni se afirmó nada sin prueba.**
+
+---
+
+## 2026-10-31 — Movimiento, materiales y accesibilidad con la skill apple-design
+
+**Principio**: interfaz fluida (skill `apple-design`, Emil Kowalski, MIT): respuesta al tocar, movimiento solo con transform/opacity, materiales translúcidos, tipografía con tracking por tamaño y respeto a las preferencias de accesibilidad.
+**Reglas aplicadas (regla de la skill → archivo)**:
+- §1 Respuesta en pointer-down (`active:scale`, 75 ms; retorno 300 ms): `src/components/ui/Button.tsx`, `sections/Header.tsx` (botón Reservar y menú), `ui/Modal.tsx` (cerrar), `StickyWhatsApp.tsx` (Chatear ahora; el botón flotante usa `whileTap`).
+- §4 Muelles críticos (damping 1.0 / response 0.4) y curvas cubic-bezier equivalentes: `src/lib/motion.ts` (SPRING_UI, SPRING_SHEET, SPRING_SNAP), variables `--ease-spring*` y `.ease-spring` en `globals.css`.
+- §7 Entrada y salida por la misma ruta, con salida animada (`AnimatePresence`): menú móvil en `Header.tsx`, `Modal.tsx`, chat flotante en `StickyWhatsApp.tsx` (origen abajo-derecha, junto al botón).
+- §11 Solo `transform`/`opacity` en todo lo nuevo (`appleEnter`, `appleSwap`, `revealIn`, `applePulse`, transiciones `transition-[transform,...]`).
+- §12 Materiales con `backdrop-filter`: `.material-bar` (cabecera, `Header.tsx`), `.material-veil` (velo de lectura del hero en móvil, `Hero.tsx`), `.material-soft` (frase de la fundadora, `ExpertProfile.tsx`).
+- §14 Movimiento reducido: bloque `@media (prefers-reduced-motion: reduce)` en `globals.css` (apaga `.enter`, `.panel-swap`, `.reveal*`, `.pulse-ring`, transiciones a 120 ms), `useReducedMotion` en Header, Modal y StickyWhatsApp (cross-fade corto), `motion-reduce:` en botones y estrellas de Testimonials. Transparencia reducida y contraste alto: `@media (prefers-reduced-transparency: reduce)` y `(prefers-contrast: more)` vuelven opacos los materiales.
+- §15 Tipografía: tracking negativo y interlineado cerrado en títulos grandes (`Hero.tsx` h1 -0.02em / 1.05; h2 de `Services`, `Testimonials`, `ExpertProfile` -0.015em / 1.1), `font-optical-sizing` y `text-wrap: balance` en `globals.css`.
+- Reveal al hacer scroll sin bloquear contenido: `.reveal*` con `animation-timeline: view()` (solo CSS; sin soporte, el contenido se ve igual). Aplicado en el grid del `Footer.tsx`; el resto de secciones ya traía su `whileInView`.
+- Objetivos táctiles de 44 px: botones (`Button.tsx`, Header, Modal, StickyWhatsApp) y enlaces del menú móvil.
+**No se cambió**: textos, precios, teléfonos, enlaces ni imágenes (verificado con `git diff -w` contra la base: ningún href ni texto distinto).
+**Rama**: mejora-diaria/2026-10-31-apple (base mejora-diaria/2026-10-31; main intacto en 91f9e54)
+**Build**: 19/19 páginas; ruta `/` 149 kB -> 150 kB de First Load JS (+0,7 %). `tsc --noEmit` limpio; `next lint` con los mismos 6 errores `react/no-unescaped-entities` que ya tenía la base.
+**Preview**: pendiente (la rama no se ha subido al remoto).
