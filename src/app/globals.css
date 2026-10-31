@@ -6,6 +6,18 @@
   --foreground-rgb: 45, 79, 73;
   --background-start-rgb: 249, 249, 249;
   --background-end-rgb: 255, 255, 255;
+
+  /* ── Tokens de movimiento (skill apple-design) ──────────────────────────
+     La skill describe el muelle con dos parámetros: `damping` (cuánto
+     rebota) y `response` (cuánto tarda en asentarse). En CSS no hay
+     muelles, así que se traducen a sus cubic-bezier equivalentes:
+       damping 1.0 (sin rebote)  -> --ease-spring
+       damping 0.8 (rebote leve)  -> --ease-spring-bounce
+     La curva de salida es la inversa espejada de la de entrada (§7:
+     "mirror the easing on reversible transitions"). */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @layer base {
@@ -20,6 +32,22 @@
   /* Premium Selection Color */
   ::selection {
     @apply bg-brand-warm/30 text-brand-dark;
+  }
+
+  /* ── Tipografía (§15) ───────────────────────────────────────────────────
+     El tracking nunca es un valor único: depende del tamaño. Los
+     títulos grandes van con tracking negativo y el cuerpo se queda
+     cerca de 0. `font-optical-sizing` deja que la fuente variable
+     ajuste su forma al tamaño en vez de escalarse. */
+  h1,
+  h2,
+  h3 {
+    font-optical-sizing: auto;
+  }
+
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 }
 
@@ -45,17 +73,204 @@
   }
 }
 
-@layer utilities {
-  .animate-in {
-    animation: animateIn 0.3s ease-out;
+/* ══════════════════════════════════════════════════════════════════════════
+   apple-design — capa de movimiento, materiales y accesibilidad
+   Reglas de la skill `apple-design` (Emil Kowalski, MIT) aplicadas como
+   guía de diseño web. Todo lo que se anima aquí usa únicamente
+   `transform` y `opacity` (§11): así el trabajo queda en el compositor y
+   no provoca layout ni repintado en cada frame.
+
+   Estas reglas van FUERA de `@layer` a propósito: en CSS las reglas sin
+   capa ganan a las de capa, así que estas utilidades mandan sobre las
+   de Tailwind sin tener que pelear con `!important` en cada sitio.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── §4 Curva de resorte para las transiciones de CSS ──────────────────── */
+.ease-spring {
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ── §11 Will-change sólo mientras el movimiento es inminente ────────── */
+.will-move {
+  will-change: transform, opacity;
+}
+
+/* ── §12 Materials — capas translúcidas con backdrop-filter ────────────
+   La barra de navegación es una capa flotante: el contenido pasa por
+   debajo. El borde superior claro es la luz que "queda" en el material,
+   y por eso se lee como vidrio y no como una barra opaca. */
+.material-bar {
+  background-color: rgba(232, 220, 196, 0.78);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 1px 14px rgba(26, 60, 52, 0.07);
+}
+
+/* Velo de lectura sobre la foto del hero: mismo material, más tenue.
+   En escritorio el velo no hace falta (el degradado horizontal ya
+   resuelve el contraste), así que ahí se retira. */
+.material-veil {
+  background-color: rgba(248, 246, 244, 0.78);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+
+@media (min-width: 1024px) {
+  .material-veil {
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
-  
-  .fade-in {
-    animation: fadeIn 0.3s ease-out;
+}
+
+/* Caja translúcida sobre fondo claro (frase de la fundadora). */
+.material-soft {
+  background-color: rgba(248, 246, 244, 0.62);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+}
+
+/* ── §15 Reveal-on-scroll sin bloquear contenido ────────────────────────
+   El contenido NUNCA depende de JavaScript para ser visible. La
+   animación de entrada la aporta el navegador con
+   `animation-timeline: view()`, que es puramente CSS y no necesita
+   ninguna librería. Los navegadores que no lo soportan no aplican
+   nada de esta regla y muestran el bloque tal cual: se puede perder
+   la animación, nunca el contenido. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal,
+    .reveal-left,
+    .reveal-right {
+      animation-name: revealIn;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+
+    .reveal-left {
+      --reveal-from-x: -24px;
+      --reveal-from-y: 0px;
+    }
+
+    .reveal-right {
+      --reveal-from-x: 24px;
+      --reveal-from-y: 0px;
+    }
   }
-  
-  .zoom-in {
-    animation: zoomIn 0.3s ease-out;
+}
+
+/* ── Entrada en pantalla (§4): animación CSS pura, sin JS ─────────────── */
+.enter {
+  animation: appleEnter 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Cambio de panel (pestañas / pasos del modal): misma ruta de salida ─ */
+.panel-swap {
+  animation: appleSwap 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* ── §13 Pulso del botón de WhatsApp: bucle infinito, se apaga con
+      movimiento reducido ───────────────────────────────────────────────── */
+.pulse-ring {
+  animation: applePulse 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   §14 Reduced motion / reduced transparency / contrast
+   Son tres señales independientes: se responden por separado.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* Se apagan TODAS las animaciones nuevas. Lo que se conserva son los
+     cambios de color y opacidad, que no provocan movimiento y sí
+     ayudan a entender el estado del control. */
+  .enter,
+  .panel-swap,
+  .animate-in,
+  .fade-in,
+  .zoom-in,
+  .pulse-ring,
+  .reveal,
+  .reveal-left,
+  .reveal-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Las transiciones de color siguen, pero más cortas: el control
+     responde igual de rápido, sólo que sin movimiento. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 120ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  /* El material se vuelve "escarchado": más opaco y sin blur (§14). */
+  .material-bar {
+    background-color: #e8dcc4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .material-veil {
+    background-color: #f8f6f4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .material-soft {
+    background-color: #f8f6f4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  /* Fondo casi opaco y borde definido que lo separa del contenido. */
+  .material-bar {
+    background-color: #e8dcc4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 1px rgba(26, 60, 52, 0.45) !important;
+  }
+
+  .material-veil {
+    background-color: #f8f6f4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .material-soft {
+    background-color: #f8f6f4 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Al imprimir no hay scroll: el reveal se quedaría en su estado
+   inicial. Se resuelve mostrando todo el contenido. */
+@media print {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .enter,
+  .panel-swap {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -87,5 +302,58 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Entrada del contenido principal: opacidad + desplazamiento, nada más. */
+@keyframes appleEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cambio de panel: se desvanece y sube 8 px en su sitio. */
+@keyframes appleSwap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reveal al entrar en pantalla: sube desde abajo (o desde el lado), sin
+   cambiar de tamaño. */
+@keyframes revealIn {
+  from {
+    opacity: 0;
+    transform: translate(var(--reveal-from-x, 0px), var(--reveal-from-y, 16px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Pulso del CTA de WhatsApp: sólo transform + opacity. */
+@keyframes applePulse {
+  0% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
   }
 }
