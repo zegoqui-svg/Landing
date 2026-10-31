@@ -320,3 +320,32 @@ Las 7 páginas nuevas no son cascarones: cada una renderiza `h1` + 3 `h2` + 5–
 - El excerpt de *Celulitis: Causas y Tratamientos Efectivos* dice "Understanding cellulit and los mejores tratamientos…": está en inglés, con una palabra mal escrita ("cellulit") y "and" en medio de la frase en español. Es el texto publicado desde el inicio; se dejó **verbatim** y se corrige solo con aprobación.
 - La meta de verificación de Google en `src/app/layout.tsx` es el placeholder literal `google-site-verification-code` (no es un token real). No se tocó porque la etiqueta no sirve de nada sin el código verdadero, que solo tiene Sebastián.
 - `businessInfo.instagramUrl` conserva el comentario `// Placeholder based on brand`. La URL responde 200, pero Instagram sirve un shell JS tanto para perfiles existentes como inexistentes, así que **no se pudo confirmar** que la cuenta exista: no se quitó ni se afirmar nada sin prueba.
+
+---
+
+## 2026-10-31 (r2) — El excerpt de Celulitis en español y sin meta de verificación falsa
+
+**Principio**: honestidad de contenido + honestidad técnica — una tarjeta de blog que mezcla dos idiomas y una palabra mal escrita se lee como un error de la marca, y una etiqueta `<meta name="google-site-verification">` con un valor inventado es una afirmación técnica falsa: o es el código real de Search Console o no debe estar ahí.
+**Por qué**: la entrada anterior de este mismo día (corrección de los 7 enlaces rotos del blog) dejó **anotados como pendientes** estos dos defectos, sin tocarlos, porque uno es copy publicado y el otro necesita un valor que solo tiene Sebastián: *"El excerpt de Celulitis… está en español con un fragmento en inglés y 'cellulit' mal escrito… se corrige solo con aprobación"* y *"La meta de verificación de Google… es el placeholder literal `google-site-verification-code` (no es un token real). O se consigue el código verdadero de Search Console o se quita la etiqueta"*. Esta corrida es **la aprobación explícita de Sebastián** para el texto en español y para **quitar** la etiqueta (no para inventar un token). Cierra los dos pendientes; el tercero (`businessInfo.instagramUrl`) sigue abierto porque requiere evidencia que no se tiene.
+**Cambios** (2 archivos, +1/-4 netos; solo `src/data/blog.ts` y `src/app/layout.tsx`):
+- **`src/data/blog.ts`**: el excerpt de *Celulitis: Causas y Tratamientos Efectivos* pasa de `"Understanding cellulit and los mejores tratamientos para reducir su apariencia de forma duradera."` a `"Entiende qué es la celulitis y los mejores tratamientos para reducir su apariencia de forma duradera."`. El artículo no tiene cuerpo propio (se arma con `buildBodyFromPublishedData()` a partir de su excerpt + la descripción y la categoría ya publicadas), así que el arreglo sirve **tanto** para la tarjeta del índice `/blog` **como** para el primer párrafo del artículo: una sola línea de datos corrige las dos apariciones.
+- **`src/app/layout.tsx`**: se elimina el objeto `verification` completo (`verification.google: 'google-site-verification-code'`). Como era su única clave, el objeto quedaba vacío y `Metadata` no lo acepta vacío: se quita el bloque entero, no solo la etiqueta. **No** se pone un token nuevo — un código de Search Console inventado sería el mismo defecto con otro disfraz.
+**Medido** (sobre el build local, `.next/` generado por este commit):
+| | antes | después |
+|---|---|---|
+| `grep -rn "cellulit" src` | 1 (inglés, mal escrito) | **0** |
+| `grep -rn "Understanding" src` | 1 | **0** |
+| `grep -rn "google-site-verification" src` | 1 | **0** |
+| `grep -rn "verification" src` | 3 (el objeto + la etiqueta) | **0** |
+| "Entiende qué es la celulitis…" en el HTML del artículo | 0 | **4** (DOM + payload RSC) |
+| "Understanding cellulit…" en el HTML del artículo | 4 | **0** |
+| `google-site-verification` en todo `.next/` | presente | **0** |
+| `<meta name="robots" content="index, follow"/>` | presente | **presente** (sin cambio) |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 149 kB | **149 kB** (sin cambios) |
+Los otros 10 excerpts de `src/data/blog.ts` se compararon campo por campo contra `HEAD`: **sin cambios**. El único `meta` que sale del `<head>` es el de verificación; `robots`, `openGraph`, `twitter` y los dos JSON-LD (`BeautySalon`, `FAQPage`) siguen igual.
+**Rama**: mejora-diaria/2026-10-31 (base `mejora-diaria/2026-10-30`, nunca `main`) · commit de código `f903911` + commit de bitácora
+**Preview**: https://spa-landing-8utz9pxfc-zegoqui-svgs-projects.vercel.app — deployment `dpl_8xT97dsTupdiGEmpBrRfd2uFp7vt` del commit **de código** `f903911` (SHA `f903911c45abcd14002eed49ad1f9f9848ef2da4`, ref `mejora-diaria/2026-10-31`), estado **READY**, `target` = null (≠ production), rama de producción = `main` intacto en `91f9e54`. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** (verificado sin seguir el redirect); hace falta iniciar sesión en Vercel para ver la página.
+**Métrica esperada**: ↓ sensación de error/abandono en la tarjeta de Celulitis del blog (proxy: clics en "Leer más" de esa tarjeta vs. el resto del índice — la única que hoy mostraba copy en dos idiomas); en SEO, la eliminación de la etiqueta falsa **no** cambia el rastreo (no había sitio verificado que perder) y evita un token inválido en el `<head>` de las 19 páginas. Cualitativa: no se publica nada hasta que Sebastián responda "publica".
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, First Load JS 149 kB sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.3 GiB libres. Sin capturas: el Chromium del host no arranca por libs de sistema y no se usa sudo; la verificación fue sobre el HTML renderizado por el propio build de Next. La línea `[CRON_REPORT_ERROR] Dynamic server usage: Route /api/cron/report…` que aparece durante el build es informativa de una route dinámica (no es un fallo): el exit code es 0 y las 19/19 páginas se generaron.
+**Pendiente anotado** (sigue abierto, no se corrigió): `businessInfo.instagramUrl` conserva el comentario `// Placeholder based on brand`; Instagram sirve un shell JS igual para perfiles existentes e inexistentes, así que no se puede confirmar la cuenta. **No se quitó ni se afirmó nada sin prueba.**
