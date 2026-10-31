@@ -280,3 +280,43 @@ En el HTML de la landing (`.next/server/app/index.html`) y en los chunks de clie
 **Métrica esperada**: ↓ abandonment en el paso 1 del modal y ↑ confianza percibida: el bloque ya no hace promesas que SILUEL no puede respaldar. Proxy:↓ salidas por rebote justo después de abrir el modal (evento de apertura → paso 2 "Continuar"); ↑ completitud del flujo de reserva. Cualitativa hasta tener baseline de analítica por paso.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 12/12 páginas, First Load JS 149 kB sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.3 GiB libres (por encima del gate de 2 GiB, bajo el de 2.56 GiB). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
 **Pendiente anotado**: los ítems #4 (link a reseñas de Google) y #7 (video en el Hero) siguen bloqueados por falta de material real — se necesitan la URL de Google Reviews y un video filmado de la sala/Elsa. No se inventaron.
+
+---
+
+## 2026-10-31 — El blog deja de tener 7 enlaces rotos en "Leer más"
+
+**Principio**: honestidad de navegación (NN/g: un enlace debe llevar a donde promete) + deuda de contenido (DRY: una sola fuente de verdad) — un catálogo que anuncia 11 artículos y entrega 4 es peor que un catálogo de 4, porque cada clic fallido es una promesa rota y una señal de confianza perdida en la página que más texto tiene del sitio.
+**Por qué**: auditoría de las rutas internas del repo (no había ítem de backlog que encajara: el #4 sigue bloqueado por falta de la URL real de Google Reviews y el #7 por falta de material filmado). Al cruzar el listado del índice del blog con las páginas realmente generadas aparecieron **dos defectos encadenados**:
+| | antes | después |
+|---|---|---|
+| artículos en el índice `/blog` | 11 | 11 |
+| páginas de artículo generadas | **4** | **11** |
+| enlaces "Leer más" que dan **404** | **7 de 11 (64 %)** | **0** |
+| entradas del `sitemap.xml` | 2 (una con slug inexistente) | 13 (todas reales) |
+
+La causa raíz era la **duplicación del listado**: `src/app/blog/page.tsx` tenía los 11 artículos (con `title`, `excerpt`, `image`, `date`, `category`), mientras `src/app/blog/[slug]/page.tsx` tenía un mapa aparte con solo 4 (los únicos con cuerpo de artículo). Los 7 restantes existían en el índice pero no en el enrutador, así que `/blog/<slug>` caía en `notFound()`. El `sitemap.ts` no conocía esa duplicación: era una lista escrita a mano con 2 entradas, y una de ellas —`/blog/maderoterapia-beneficios`— no correspondía a ningún slug real (el real es `beneficios-maderoterapia`), mientras las otras 10 URLs válidas no se anunciaban.
+**Cambios** (4 archivos, +335/-260 netos; el grueso es *reubicación* de contenido ya existente, no copy nuevo):
+- **`src/data/blog.ts` (nuevo, 266 líneas)**: fuente única de verdad con los 11 artículos. Se movió tal cual el array del índice y los 4 cuerpos de artículo. Cada artículo lleva además `readTime` y, para los 7 sin cuerpo, `relatedServices` / `relatedCategory` (ids de los servicios y categorías **ya publicados** en `src/data/index.ts`).
+- **`src/app/blog/page.tsx`**: importa `blogPosts` de `@/src/data/blog` en vez de declarar su propio array (‑91 líneas). Cero cambios visuales.
+- **`src/app/blog/[slug]/page.tsx`**: usa `blogPostBySlug` y `generateStaticParams` sobre los 11. Para los 7 que no tienen cuerpo publicado, `buildBodyFromPublishedData()` arma el artículo con **su propio `excerpt`** + la **descripción real del servicio publicado** + la **categoría publicada** + el CTA. No se inventó copy: todo sale de `src/data/index.ts` o del propio artículo.
+- **`src/app/sitemap.ts`**: se genera desde `blogPosts`, con `lastModified` igual a la fecha real del artículo. Desaparecen el slug fantasma y las 9 URLs que faltaban.
+**Medido** (sobre el build local, `.next/server/app/blog/`):
+| | antes | después |
+|---|---|---|
+| `.html` generados en `/blog/*` | 4 | **11** |
+| enlaces "Leer más" en el índice sin página | **7** | **0** |
+| páginas generadas sin enlace en el índice | 0 | **0** |
+| `<loc>` en `sitemap.xml` | 3 (1 fantasma) | **13** (todos reales) |
+| `sitemap.xml` con slug sin página | 1 | **0** |
+| páginas estáticas generadas | 12 | **19** |
+| First Load JS | 149 kB | 149 kB (sin cambios) |
+Las 7 páginas nuevas no son cascarones: cada una renderiza `h1` + 3 `h2` + 5–7 `<p>` (~27 kB de HTML). Verificado sobre el HTML generado que cada una nombra el servicio y la categoría reales de `src/data/index.ts` ("Reductivos", "Maderoterapia", "Corporales", etc.), no texto genérico.
+**Integridad del copy**: se comprobó campo por campo que los 11 artículos siguen con su metadata **verbatim** respecto a los dos archivos originales (55 campos: `title`, `excerpt`, `image`, `date`, `category`) y que los 4 cuerpos de artículo se movieron **verbatim** línea por línea. En la primera pasada se corrigió por error un "and" en inglés a "y" en el excerpt de *Celulitis*: la verificación lo detectó y se revirtió al texto original.
+**Rama**: mejora-diaria/2026-10-31 (base `mejora-diaria/2026-10-30`, nunca `main`)
+**Preview**: https://spa-landing-git-mejora-diaria-2026-10-31-zegoqui-svgs-projects.vercel.app — deployment `dpl_5BBUEmPZbgUm8p7Frg1QKYNp28MJ` del commit `7d3029c` (SHA `7d3029ce1af36f6f15b0cc246c262552fed6df6b`, ref `mejora-diaria/2026-10-31`), estado **READY**, `target` = null (≠ production), rama de producción = `main` intacto en `91f9e54`. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **200 pero redirige** (2 saltos) a `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página.
+**Métrica esperada**: ↓ rebote y ↓ salidas por rebote desde `/blog` (7 de cada 11 clics hoy terminan en 404); ↑ páginas indexadas por Google (el `sitemap.xml` pasa de 3 URLs —una rota— a 13 reales, y las 11 páginas pasan de 4 estáticas a 11); ↑ lectura hasta el CTA de WhatsApp al final de un artículo. Proxy: cobertura de `sitemap.xml` en Search Console, y clics salientes a `wa.me` originados en `/blog/*`.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas estáticas, First Load JS 149 kB sin cambios). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
+**Pendiente anotado** (no corregido hoy, por no ser copy publicable sin decisión de Sebastián):
+- El excerpt de *Celulitis: Causas y Tratamientos Efectivos* dice "Understanding cellulit and los mejores tratamientos…": está en inglés, con una palabra mal escrita ("cellulit") y "and" en medio de la frase en español. Es el texto publicado desde el inicio; se dejó **verbatim** y se corrige solo con aprobación.
+- La meta de verificación de Google en `src/app/layout.tsx` es el placeholder literal `google-site-verification-code` (no es un token real). No se tocó porque la etiqueta no sirve de nada sin el código verdadero, que solo tiene Sebastián.
+- `businessInfo.instagramUrl` conserva el comentario `// Placeholder based on brand`. La URL responde 200, pero Instagram sirve un shell JS tanto para perfiles existentes como inexistentes, así que **no se pudo confirmar** que la cuenta exista: no se quitó ni se afirmar nada sin prueba.
