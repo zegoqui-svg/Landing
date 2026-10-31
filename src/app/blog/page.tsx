@@ -2,6 +2,10 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+// El listado vive en `src/data/blog.ts` (fuente unica compartida con
+// `src/app/blog/[slug]/page.tsx`). Antes estaba duplicado aqui y alli, y el
+// desfase hacia que 7 de los 11 enlaces "Leer mas" dieran 404.
+import { blogPosts } from '@/src/data/blog';
 
 export const metadata: Metadata = {
   title: 'Blog | SILUEL Centro de Terapia y Masaje',
@@ -14,97 +18,6 @@ export const metadata: Metadata = {
     url: 'https://spa-landing-vert.vercel.app/blog',
   },
 }
-
-const blogPosts = [
-  {
-    slug: 'beneficios-maderoterapia',
-    title: 'Beneficios de la Maderoterapia para tu Cuerpo',
-    excerpt: 'Descubre cómo esta técnica ancestral puede transformar tu silueta, reducir medidas y eliminar celulitis de forma natural.',
-    image: '/images/maderoterapia.jpg',
-    date: '2026-03-19',
-    category: 'Tratamientos',
-  },
-  {
-    slug: 'drenaje-linfatico-post-cirugia',
-    title: 'Por qué el Drenaje Linfático es Esencial después de una Cirugía',
-    excerpt: 'Aprende sobre la importancia del drenaje linfático en la recuperación post-operatoria y cómo acelera tu curación.',
-    image: '/images/post-operatorio.jpg',
-    date: '2026-03-15',
-    category: 'Recuperación',
-  },
-  {
-    slug: 'cuidado-facial-casa',
-    title: '5 Tips para Cuidar tu Rostro entre Sesiones',
-    excerpt: 'Mantén los resultados de tu facial con estos simples consejos que puedes aplicar en casa.',
-    image: '/images/facial.jpg',
-    date: '2026-03-10',
-    category: 'Cuidado Personal',
-  },
-  {
-    slug: 'masajes-reductor-vs-relajante',
-    title: 'Diferencias entre Masaje Reductor y Masaje Relajante',
-    excerpt: "Conoce cuál es el tratamiento ideal para tus objetivos: modela tu cuerpo o aliviar el estrés.",
-    image: '/images/masajes.jpg',
-    date: '2026-03-05',
-    category: 'Tratamientos',
-  },
-  {
-    slug: 'celulitis-causas-tratamientos',
-    title: 'Celulitis: Causas y Tratamientos Efectivos',
-    excerpt: 'Understanding cellulit and los mejores tratamientos para reducir su apariencia de forma duradera.',
-    image: '/images/corporales.jpg',
-    date: '2026-02-28',
-    category: 'Tratamientos',
-  },
-  {
-    slug: 'post-operatorio-que-esperar',
-    title: 'Qué Esperar en tu Primera Sesión Post-Operatoria',
-    excerpt: 'Una guía completa sobre qué es normal y qué no después de tu cirugía estética.',
-    image: '/images/recovery.jpg',
-    date: '2026-02-20',
-    category: 'Recuperación',
-  },
-  {
-    slug: 'cuantas-sesiones-maderoterapia',
-    title: 'Cuántas Sesiones de Maderoterapia Necesitas para Ver Resultados',
-    excerpt: 'Te explicamos cuántas sesiones necesitas según tus objetivos: reducción de medidas, celulitis o mantenimiento.',
-    image: '/images/maderoterapia.png',
-    date: '2026-03-20',
-    category: 'Tratamientos',
-  },
-  {
-    slug: 'reduccion-medidas-guadalajara',
-    title: 'Reducción de Medidas en Guadalajara: Tratamientos más Efectivos',
-    excerpt: 'Descubre los tratamientos más efectivos para reducir medidas en Guadalajara. Maderoterapia, vacumterapia y más.',
-    image: '/images/corporales.jpg',
-    date: '2026-03-18',
-    category: 'Tratamientos',
-  },
-  {
-    slug: 'mejor-spa-guadalajara',
-    title: 'Cómo Elegir el Mejor Spa en Guadalajara',
-    excerpt: 'Guía completa para elegir el mejor spa y centro de estética en Guadalajara. Tips y recomendaciones.',
-    image: '/images/hero.png',
-    date: '2026-03-16',
-    category: 'Consejos',
-  },
-  {
-    slug: 'costo-maderoterapia',
-    title: 'Cuánto Cuesta la Maderoterapia en Guadalajara',
-    excerpt: 'Todo sobre precios y costos de la maderoterapia en Guadalajara. Qué esperar y qué incluye el tratamiento.',
-    image: '/images/masajes.jpg',
-    date: '2026-03-14',
-    category: 'Información',
-  },
-  {
-    slug: 'levantamiento-gluteos-sin-cirugia',
-    title: 'Levantamiento de Glúteos sin Cirugía: Opciones Disponibles',
-    excerpt: 'Logra glúteos más firmes y levantados sin necesidad de cirugía. Conoce las técnicas más efectivas.',
-    image: '/images/levantamiento-gluteos.jpg',
-    date: '2026-03-12',
-    category: 'Tratamientos',
-  },
-]
 
 export default function BlogPage() {
   return (
