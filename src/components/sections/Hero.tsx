@@ -39,7 +39,7 @@ export function Hero({ onBookClick }: HeroProps) {
         <div className="flex-1 max-w-2xl text-center lg:text-left">
           {/* Velo de lectura: en móvil el degradado deja ver la foto, así que el texto
               necesita su propio respaldo para mantener contraste AA sobre la imagen. */}
-          <div className="rounded-3xl bg-brand-light/80 px-4 py-6 -mx-4 backdrop-blur-[2px] sm:px-6 lg:bg-transparent lg:px-0 lg:py-0 lg:mx-0 lg:backdrop-blur-none">
+          <div className="rounded-3xl material-veil px-4 py-6 -mx-4 sm:px-6 lg:px-0 lg:py-0 lg:mx-0">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -50,7 +50,7 @@ export function Hero({ onBookClick }: HeroProps) {
               <span>Centro Premium de Terapia y Masaje</span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-medium text-brand-dark leading-[1.1] mb-8">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-medium text-brand-dark leading-[1.05] tracking-[-0.02em] mb-8">
               Elige sentirte bien, <br />
               <span className="text-brand-warm italic relative inline-block">
                 por dentro
@@ -67,7 +67,7 @@ export function Hero({ onBookClick }: HeroProps) {
             </p>
 
             <div className="flex flex-col items-center lg:items-start gap-4">
-              <Button onClick={onBookClick} size="lg" className="bg-brand-dark hover:bg-brand-primary text-white px-10 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+              <Button onClick={onBookClick} size="lg" className="bg-brand-dark hover:bg-brand-primary text-white px-10 rounded-full shadow-lg hover:shadow-xl">
                 Reservar mi cita
                 <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
               </Button>

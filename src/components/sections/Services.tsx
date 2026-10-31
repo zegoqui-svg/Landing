@@ -41,7 +41,7 @@ export function Services({ onServiceSelect }: ServicesProps) {
           className="text-center mb-16"
         >
           <span className="text-brand-warm font-medium uppercase tracking-widest text-sm">Nuestros Servicios</span>
-          <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark mt-4 mb-6">
+          <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark leading-[1.1] tracking-[-0.015em] mt-4 mb-6">
             Tratamientos Exclusivos
           </h2>
           <p className="text-brand-dark/70 max-w-2xl mx-auto text-lg font-light">

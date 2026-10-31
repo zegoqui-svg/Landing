@@ -45,7 +45,7 @@ export function Testimonials() {
           className="text-center mb-20"
         >
           <span className="text-brand-warm font-medium uppercase tracking-[0.2em] text-sm">Experiencias Reales</span>
-          <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark mt-4 mb-6">
+          <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark leading-[1.1] tracking-[-0.015em] mt-4 mb-6">
             Confianza que se <span className="italic text-brand-warm underline decoration-brand-warm/30 underline-offset-8">siente</span>
           </h2>
           <p className="text-brand-dark/60 max-w-2xl mx-auto text-lg font-light leading-relaxed">
@@ -123,7 +123,7 @@ export function Testimonials() {
           <div className="relative z-10 flex flex-col md:flex-row justify-around items-center gap-12 text-white">
             <div className="text-center group">
               <div className="flex justify-center items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-brand-warm fill-brand-warm animate-pulse" />
+                <Star className="w-5 h-5 text-brand-warm fill-brand-warm animate-pulse motion-reduce:animate-none" />
                 <span className="text-4xl font-serif font-bold tracking-tight">4.9/5</span>
               </div>
               <p className="text-brand-warm/60 uppercase tracking-widest text-xs font-semibold">Valoración Media</p>

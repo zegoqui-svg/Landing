@@ -56,7 +56,7 @@ export function ExpertProfile() {
               Nuestra Fundadora
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark mb-4 leading-tight">
+            <h2 className="text-4xl sm:text-5xl font-serif font-medium text-brand-dark mb-4 leading-[1.1] tracking-[-0.015em]">
               La visión detrás de <span className="text-brand-warm italic">Siluel</span>
             </h2>
 
@@ -82,7 +82,7 @@ export function ExpertProfile() {
               ))}
             </div>
 
-            <div className="bg-brand-light/50 backdrop-blur-sm rounded-2xl p-8 relative border border-brand-warm/10 shadow-inner">
+            <div className="material-soft rounded-2xl p-8 relative border border-brand-warm/10 shadow-inner">
               <Quote className="w-10 h-10 text-brand-warm/20 absolute -top-4 -left-4" />
               <p className="text-brand-dark/70 italic text-lg leading-relaxed font-serif relative z-10">
                 {expertInfo.philosophy}
