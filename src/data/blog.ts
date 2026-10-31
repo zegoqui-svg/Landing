@@ -175,7 +175,7 @@ Visítanos en Plan de Ayala 1859, INT 28, Guadalajara.
     slug: 'celulitis-causas-tratamientos',
     title: 'Celulitis: Causas y Tratamientos Efectivos',
     excerpt:
-      'Understanding cellulit and los mejores tratamientos para reducir su apariencia de forma duradera.',
+      'Entiende qué es la celulitis y los mejores tratamientos para reducir su apariencia de forma duradera.',
     image: '/images/corporales.jpg',
     date: '2026-02-28',
     category: 'Tratamientos',
