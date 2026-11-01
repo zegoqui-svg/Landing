@@ -1,6 +1,25 @@
 import type { Metadata } from 'next'
 import { Montserrat, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
+import { businessHours } from '@/src/data'
+
+// El JSON-LD y el modal de reserva leen el MISMO horario publicado
+// (`src/data/index.ts`). Antes el modal ofrecia otra lista, con horas en las
+// que el centro estaba cerrado (p. ej. 7:00 PM un sabado, cierre 6:00 PM).
+const OPENING_HOURS_SPECIFICATION = [
+  {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    opens: businessHours[1]!.open,
+    closes: businessHours[1]!.close,
+  },
+  {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Saturday'],
+    opens: businessHours[6]!.open,
+    closes: businessHours[6]!.close,
+  },
+];
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -95,20 +114,7 @@ export default function RootLayout({
                 "latitude": "20.6597",
                 "longitude": "-103.3496"
               },
-              "openingHoursSpecification": [
-                {
-                  "@type": "OpeningHoursSpecification",
-                  "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                  "opens": "09:00",
-                  "closes": "20:00"
-                },
-                {
-                  "@type": "OpeningHoursSpecification",
-                  "dayOfWeek": "Saturday",
-                  "opens": "09:00",
-                  "closes": "18:00"
-                }
-              ],
+              "openingHoursSpecification": OPENING_HOURS_SPECIFICATION,
               "priceRange": "$$",
               "image": "https://spa-landing-vert.vercel.app/images/hero.png",
               "sameAs": [

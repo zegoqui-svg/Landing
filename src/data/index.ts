@@ -159,6 +159,23 @@ export const testimonials: Testimonial[] = [
 
 export const whatsappNumber = '523339657478';
 
+// Horario publicado de SILUEL (la misma informacion que el JSON-LD
+// `openingHoursSpecification` de `src/app/layout.tsx`, movida aqui para que el
+// modal de reserva y los datos estructurados lean de una sola fuente).
+// Indice = dia de la semana (0 = domingo). `null` = cerrado.
+export const businessHours: ({ open: string; close: string } | null)[] = [
+  null, // domingo
+  { open: '09:00', close: '20:00' }, // lunes
+  { open: '09:00', close: '20:00' }, // martes
+  { open: '09:00', close: '20:00' }, // miercoles
+  { open: '09:00', close: '20:00' }, // jueves
+  { open: '09:00', close: '20:00' }, // viernes
+  { open: '09:00', close: '18:00' }, // sabado
+];
+
+/** Resumen legible del horario publicado, para mostrarlo en la interfaz. */
+export const businessHoursSummary = 'Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM';
+
 export const businessInfo = {
   name: 'SILUEL',
   fullName: 'SILUEL Centro de Terapia y Masaje',

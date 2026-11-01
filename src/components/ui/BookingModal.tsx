@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Service } from '@/src/types';
-import { services, serviceCategories, whatsappNumber } from '@/src/data';
+import { services, serviceCategories, whatsappNumber, businessHours, businessHoursSummary } from '@/src/data';
 import { Check, Calendar, Clock, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 
 interface BookingModalProps {
@@ -14,11 +14,31 @@ interface BookingModalProps {
   selectedService: Service | null;
 }
 
-const BUSINESS_HOURS = [
-  '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM',
-  '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-  '6:00 PM', '7:00 PM'
-];
+/** "09:00" -> "9:00 AM" (mismo formato que usaba la lista anterior). */
+function formatSlot(hour: string): string {
+  const [h, m] = hour.split(':').map(Number);
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+// Horarios de inicio segun el horario publicado (`businessHours`). El ultimo
+// inicio es una hora antes del cierre: no se ofrece una cita que empieza
+// cuando el centro ya cerro. `day` = dia de la semana (0 domingo).
+function getSlotsForDay(day: number): string[] | null {
+  const hours = businessHours[day];
+  if (!hours) return null;
+  const [openH, openM] = hours.open.split(':').map(Number);
+  const [closeH, closeM] = hours.close.split(':').map(Number);
+  const slots: string[] = [];
+  for (let t = openH * 60 + openM; t <= closeH * 60 + closeM - 60; t += 60) {
+    slots.push(formatSlot(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`));
+  }
+  return slots;
+}
+
+/** Dia de la semana (0 = domingo) de una fecha ISO, en hora local. */
+function weekdayOf(isoDate: string): number {
+  return new Date(`${isoDate}T12:00:00`).getDay();
+}
 
 type Step = 'service' | 'calendar' | 'submitting' | 'success' | 'error';
 
@@ -43,6 +63,12 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const chosenCategory = chosenService
     ? serviceCategories.find(c => c.id === chosenService.category)
     : undefined;
+
+  // Horarios de inicio del dia elegido, derivados del horario publicado
+  // (`businessHours`). Antes el modal usaba una lista fija que ofrecia 7:00 PM
+  // los sabados (cuando el centro cierra a las 6:00 PM) y ocultaba la apertura
+  // de las 9:00 AM. Sin dia elegido se usa la jornada de L-V (la mas amplia).
+  const availableSlots = date ? getSlotsForDay(weekdayOf(date)) : getSlotsForDay(1);
 
   const upcomingDays = useMemo(() => {
     const days = [];
@@ -87,6 +113,18 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
     }
     if (!phone.trim() || phone.length < 10) {
       setErrorMessage('Ingresa un teléfono válido (10 dígitos)');
+      return false;
+    }
+    // El modal pide dia y hora. Antes se podia enviar sin ninguno y el mensaje
+    // de WhatsApp llegaba sin disponibilidad, dejando la cita a medias.
+    if (!date || !time) {
+      setErrorMessage('Elige el día y la hora de tu cita');
+      return false;
+    }
+    // La hora debe ser una de las disponibles para ese dia (el horario cambia
+    // el sabado y el domingo no hay horario).
+    if (!availableSlots || !availableSlots.includes(time)) {
+      setErrorMessage('Elige un horario disponible para ese día');
       return false;
     }
     return true;
@@ -397,7 +435,10 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                     {upcomingDays.map((d) => (
                       <button
                         key={d.fullDate}
-                        onClick={() => setDate(d.fullDate)}
+                        onClick={() => {
+                          setDate(d.fullDate);
+                          setTime('');
+                        }}
                         className={`flex-shrink-0 w-16 h-20 flex flex-col items-center justify-center rounded-xl border transition-all duration-200 ${
                           date === d.fullDate
                             ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
@@ -413,8 +454,14 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                       <input
                         type="date"
                         value={date}
-                        min={new Date().toISOString().split('T')[0]}
-                        onChange={(e) => setDate(e.target.value)}
+                        min={new Date().toLocaleDateString('en-CA')}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          // El centro no abre los domingos: el input nativo si
+                          // los ofrece, asi que los descartamos.
+                          setDate(next && weekdayOf(next) === 0 ? '' : next);
+                          setTime('');
+                        }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className={`w-16 h-20 flex flex-col items-center justify-center rounded-xl border border-dashed transition-all ${
@@ -434,21 +481,31 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                   <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-brand-warm" /> 2. Elige la hora
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {BUSINESS_HOURS.map((hour) => (
-                      <button
-                        key={hour}
-                        onClick={() => setTime(hour)}
-                        className={`py-3 text-xs font-semibold rounded-lg border transition-all duration-200 ${
-                          time === hour
-                            ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
-                            : 'bg-white text-brand-dark/70 border-brand-dark/10 hover:border-brand-warm/40 hover:bg-brand-warm/5'
-                        }`}
-                      >
-                        {hour}
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-xs text-brand-dark/60">
+                    Horario: {businessHoursSummary}
+                  </p>
+                  {availableSlots && availableSlots.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {availableSlots.map((hour) => (
+                        <button
+                          key={hour}
+                          type="button"
+                          onClick={() => setTime(hour)}
+                          className={`py-3 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+                            time === hour
+                              ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-[1.02]'
+                              : 'bg-white text-brand-dark/70 border-brand-dark/10 hover:border-brand-warm/40 hover:bg-brand-warm/5'
+                          }`}
+                        >
+                          {hour}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-brand-dark/70 bg-brand-dark/5 rounded-lg px-4 py-3">
+                      Ese día no hay disponibilidad. El centro abre de lunes a sábado.
+                    </p>
+                  )}
                 </div>
               </div>
 
