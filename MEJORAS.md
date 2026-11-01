@@ -369,3 +369,42 @@ Los otros 10 excerpts de `src/data/blog.ts` se compararon campo por campo contra
 **Rama**: mejora-diaria/2026-10-31-apple (base mejora-diaria/2026-10-31; main intacto en 91f9e54)
 **Build**: 19/19 páginas; ruta `/` 149 kB -> 150 kB de First Load JS (+0,7 %). `tsc --noEmit` limpio; `next lint` con los mismos 6 errores `react/no-unescaped-entities` que ya tenía la base.
 **Preview**: pendiente (la rama no se ha subido al remoto).
+
+---
+
+## 2026-11-01 — El modal de reserva ya ofrece el horario real de SILUEL
+
+**Principio**: honestidad de la disponibilidad (NN/g "Honest UX") — un selector de horas es una promesa de horario: ofrecer una cita a las 7:00 PM de un sábado, cuando el centro cierra a las 6:00 PM, es peor que no ofrecer horario; y una sola fuente de verdad (DRY) para lo que el sitio publica y lo que el modal permite.
+**Por qué**: auditoría del flujo de reserva (los ítems #4 y #7 del backlog siguen bloqueados por material real). El sitio **publica** su horario en el JSON-LD `openingHoursSpecification` de `src/app/layout.tsx`: lunes a viernes 09:00–20:00 y sábado 09:00–18:00, domingo cerrado. Pero el modal de reserva usaba una lista fija (`BUSINESS_HOURS`) que no tenía nada que ver con ese horario:
+| | antes | después |
+|---|---|---|
+| horarios ofrecidos | lista fija 10:00 AM–7:00 PM, igual todos los días | derivados del horario publicado, **por día** |
+| sábado 7:00 PM | **se ofrecía** (el centro cierra a las 6:00 PM) | no existe (último inicio 5:00 PM) |
+| apertura 9:00 AM | **no se ofrecía** | sí (lunes a sábado) |
+| domingo | el input nativo "Otro día" lo permitía | se descarta: el centro está cerrado |
+| horario visible en pantalla | nunca se mostraba | "Horario: Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM" |
+| día y hora al enviar | opcionales: la cita podía llegar a WhatsApp sin disponibilidad | obligatorios, y la hora debe ser una de las disponibles para ese día |
+| fuente del horario | dos (JSON-LD vs lista del modal) | una (`businessHours` en `src/data/index.ts`) |
+**Interpretación declarada**: el último inicio permitido es **una hora antes del cierre** (no se ofrece una cita que empieza cuando el centro ya cerró). Los horarios y el cierre son los publicados; solo se aplica esa regla de último inicio. Si Sebastián prefiere otro criterio (p. ej. cierre incluido), es un cambio de una línea en `getSlotsForDay`.
+**Cambios** (3 archivos, +80 netas):
+- **`src/data/index.ts`**: nuevo `businessHours` — el horario publicado, indexado por día de la semana (`null` = cerrado) — más `businessHoursSummary` para mostrarlo en la interfaz. Es la **misma** información que ya estaba hardcodeada en el JSON-LD; no se cambió ningún valor publicado.
+- **`src/app/layout.tsx`**: el `openingHoursSpecification` del JSON-LD ahora se arma con `businessHours` en vez de una lista propia. Se conserva el agrupamiento original (lunes a viernes / sábado) y **los valores no cambian**: sigue siendo 09:00–20:00 y 09:00–18:00.
+- **`src/components/ui/BookingModal.tsx`**: los horarios se derivan del día elegido (`getSlotsForDay` + `weekdayOf`); el input "Otro día" descarta los domingos; el `min` del input pasa a fecha **local** (`toLocaleDateString('en-CA')`) porque `toISOString()` usa UTC y en México podía adelantar un día y bloquear el día de hoy; al cambiar de día se limpia la hora; y `validateForm` exige día + hora válidos para el día.
+**Medido**:
+| | resultado |
+|---|---|
+| slots lunes (cierre 8:00 PM) | 9:00 AM … 7:00 PM (11) |
+| slots sábado (cierre 6:00 PM) | 9:00 AM … 5:00 PM (9) |
+| domingo | cerrado, sin slots |
+| algún slot ≥ horario de cierre | **0** (comprobado slot por slot contra el cierre publicado) |
+| JSON-LD `openingHoursSpecification` | Mon–Fri 09:00–20:00 · Sat 09:00–18:00 (**idéntico** al anterior) |
+| lista fija `BUSINESS_HOURS` | **0 apariciones** en los chunks; la lista vieja ya no existe |
+| resumen del horario en los chunks | presente ("Horario: Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM") |
+| `sitemap.xml` | 13 `<loc>`, sin cambios |
+| páginas estáticas | 19/19 |
+| First Load JS | 150 kB (sin cambios respecto a la base) |
+**Rama**: mejora-diaria/2026-11-01 (base mejora-diaria/2026-10-31-apple; `main` intacto en 50a86ce)
+**Preview**: https://spa-landing-3dn7b2b1r-zegoqui-svgs-projects.vercel.app — deployment `dpl_9rG2XEL9xEpG2qzDjSGZuqb1ckEi` del commit de código `c28c7df` (SHA `c28c7dfe446354b6e6e2a2ab6e50748fb1df93eb`, ref `mejora-diaria/2026-11-01`), estado **READY**, `target` ≠ production. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página.
+**Métrica esperada**: ↑ citas completadas sin correcciones por horario (proxy: ↓ mensajes de WhatsApp que llegan sin día u hora, y ↑ pasos del modal completados hasta el envío); ↓ solicitudes de cita en días/horas que el centro no atiende. Cualitativa hasta tener baseline de analítica por paso.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.08 GiB libres (por encima del gate de 2 GiB, bajo el de 2.56 GiB). `tsc --noEmit` limpio. Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre la lógica pura (test de slots), el HTML generado y los chunks del bundle.
+**Nota operativa**: el repo `Landing` está enlazado a **dos** proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promoted a producción ninguno de los dos; `ash-guard-vision` sigue siendo el proyecto hermano intocable de este cron.
