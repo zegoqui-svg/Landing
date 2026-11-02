@@ -103,6 +103,7 @@ export function Services({ onServiceSelect }: ServicesProps) {
                     alt={service.name}
                     width={640}
                     height={480}
+                    sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 384px"
                     loading="lazy"
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />

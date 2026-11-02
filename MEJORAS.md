@@ -408,3 +408,32 @@ Los otros 10 excerpts de `src/data/blog.ts` se compararon campo por campo contra
 **Métrica esperada**: ↑ citas completadas sin correcciones por horario (proxy: ↓ mensajes de WhatsApp que llegan sin día u hora, y ↑ pasos del modal completados hasta el envío); ↓ solicitudes de cita en días/horas que el centro no atiende. Cualitativa hasta tener baseline de analítica por paso.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios), compilado con `NODE_OPTIONS=--max-old-space-size=1280` porque la máquina bajó a ~2.08 GiB libres (por encima del gate de 2 GiB, bajo el de 2.56 GiB). `tsc --noEmit` limpio. Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre la lógica pura (test de slots), el HTML generado y los chunks del bundle.
 **Nota operativa**: el repo `Landing` está enlazado a **dos** proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promoted a producción ninguno de los dos; `ash-guard-vision` sigue siendo el proyecto hermano intocable de este cron.
+
+---
+
+## 2026-11-02 — Las fotos de las tarjetas de servicio ya no se descargan 5 veces más grandes de lo que se ven
+
+**Principio**: entregar solo los píxeles que el ojo puede ver (RUM / "performance budget" de web.dev y el propio Next.js Image: el atributo `sizes` es la promesa que haces al navegador sobre el tamaño real de la imagen en pantalla; sin ella, `next/image` asume que ocupa todo el ancho del viewport).
+**Por qué**: auditoría de la carga de imágenes, hecha porque los dos ítems que quedaban (#4 y #7) siguen bloqueados por material real. Las 9 tarjetas de "Nuestros Servicios" y las 11 del índice de blog usaban `<Image>` **sin atributo `sizes`**. En Next.js 14, la ausencia de `sizes` equivale a `sizes="100vw"`: el navegador cree que la imagen puede medir 1440 px de ancho y, en una pantalla con DPR 2, elige el candidato de **1920 o 2048 px** de la escalera `deviceSizes`. Pero la tarjeta real mide **384 px** (grid de 3 columnas en un `max-w-7xl`). El sitio estaba pidiendo, y descargando, imágenes de 1920–2048 px para mostrarlas en 384 px.
+**Cambios** (2 archivos, +2 netas):
+- **`src/components/sections/Services.tsx`**: `sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 384px"` en la imagen de la tarjeta de servicio.
+- **`src/app/blog/page.tsx`**: el mismo `sizes` en la imagen de la miniatura del índice de blog (misma retícula de 3 columnas).
+No se tocó `[slug]/page.tsx`: su portada es a sangre completa (`h-[50vh]` sobre todo el viewport), donde `100vw` ya es el valor correcto.
+**Medido** (pedido real del navegador a 1440 px con DPR 2, sobre el build y un servidor `next start` local; el tamaño de cada respuesta se midió con el optimizador de Next):
+| imagen | fuente | antes pedía | ahora pide | upscale | bytes antes → ahora |
+|---|---|---|---|---|---|
+| `masaje-reductivo.jpg` | 492 px | 2048 | **828** | 4.16× → **1.68×** | — |
+| `levantamiento-gluteos.jpg` | 715 px | 2048 | **828** | 2.86× → **1.16×** | — |
+| `hero.png` (miniatura de blog) | 2048 px | 2048 | **828** | 1.00× → **0.40×** | 2 905 085 B → **377 516 B** |
+| `corporales.jpg` | 1067 px | 2048 | **828** | 1.93× → 0.78× | 58 082 B → **36 383 B** |
+| `faciales.jpg` | 1061 px | 2048 | **828** | 1.93× → 0.78× | 91 784 B → **58 818 B** |
+| `masajes.jpg` | 964 px | 2048 | **828** | 2.12× → 0.86× | 45 816 B → **32 569 B** |
+| `maderoterapia.png` | 1280 px | 2048 | **828** | 1.60× → 0.65× | 59 683 B → **27 647 B** |
+| **total de las 8 imágenes medidas** | | | | | 3 238 710 B → **611 193 B (−81.1 %)** |
+Ningún `srcset` deja de ofrecer candidatos grandes: lo que cambia es **cuál elige el navegador**, que es donde estaba el desperdicio. Las fuentes más pequeñas que el ancho pedido (p. ej. `masaje-reductivo.jpg`, 492 px) siguen devolviéndose sin ampliar, porque `sharp` no escala más allá del original.
+**Efecto secundario útil**: al dejar de pedir anchos absurdos, `hero.png` —que pesa 3,1 MB como PNG— baja de 2,9 MB a 378 kB en la miniatura de blog, sin tocar el archivo original.
+**Rama**: mejora-diaria/2026-11-02 (base mejora-diaria/2026-11-01; `main` intacto en 50a86ce)
+**Preview**: pendiente (se anota el deployment ID tras el push; la URL se reporta en el mensaje del día).
+**Métrica esperada**: ↓ bytes de imagen en la landing y en `/blog` (proxy medible: peso total de las imágenes de las tarjetas, −81 % en la muestra); ↓ LCP y CLS de la home y del índice de blog en móviles y en pantallas con DPR 2; la ↑ de calidad visual es colateral (imágenes menos sobreescaladas).
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, First Load JS 150 kB sin cambios) con `NODE_OPTIONS=--max-old-space-size=1280`; `tsc --noEmit` limpio. Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML servido por `next start`, los bytes reales devueltos por el optimizador de Next y las dimensiones de cada fuente.
+**Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.

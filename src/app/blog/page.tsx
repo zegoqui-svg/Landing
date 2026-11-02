@@ -48,6 +48,7 @@ export default function BlogPage() {
                     src={post.image}
                     alt={post.title}
                     fill
+                    sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 384px"
                     className="object-cover"
                   />
                   <span className="absolute top-4 left-4 bg-brand-terracotta text-white text-xs px-3 py-1 rounded-full">
