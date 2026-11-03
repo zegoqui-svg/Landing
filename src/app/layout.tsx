@@ -21,6 +21,21 @@ const OPENING_HOURS_SPECIFICATION = [
   },
 ];
 
+// Imagen para vistas previas al compartir (WhatsApp, Facebook, LinkedIn, X).
+//
+// Antes apuntaba a `/images/hero.png`: un PNG de 3.1 MB y 2048x1064 px, con el
+// encuadre de la pagina, no el de una vista previa. Los rastreadores sociales
+// piden esa URL CRUDA (no pasan por el optimizador de Next) y las dimensiones
+// reales no coincidian con las declaradas en `og:image:width/height`.
+// `og-image.jpg` es esa misma foto recortada a 1200x630 y recomprimida:
+// 3 111 418 B -> 96 926 B (-96.9 %), con las dimensiones que el sitio declara.
+const OG_IMAGE = {
+  url: 'https://spa-landing-vert.vercel.app/images/og-image.jpg',
+  width: 1200,
+  height: 630,
+  alt: 'SILUEL Centro de Terapia y Masaje - Guadalajara',
+};
+
 const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
@@ -56,10 +71,10 @@ export const metadata: Metadata = {
     description: 'Centro especializado en maderoterapia, tratamientos reductivos, masajes terapéuticos, faciales personalizados y recuperación post-operatoria en Guadalajara.',
     images: [
       {
-        url: 'https://spa-landing-vert.vercel.app/images/hero.png',
-        width: 1200,
-        height: 630,
-        alt: 'SILUEL Centro de Terapia y Masaje - Guadalajara',
+        url: OG_IMAGE.url,
+        width: OG_IMAGE.width,
+        height: OG_IMAGE.height,
+        alt: OG_IMAGE.alt,
       },
     ],
   },
@@ -67,7 +82,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SILUEL Centro de Terapia y Masaje | Guadalajara',
     description: 'Centro especializado en maderoterapia, tratamientos reductivos y masajes terapéuticos en Guadalajara.',
-    images: ['https://spa-landing-vert.vercel.app/images/hero.png'],
+    images: [OG_IMAGE.url],
   },
   robots: {
     index: true,
@@ -116,7 +131,7 @@ export default function RootLayout({
               },
               "openingHoursSpecification": OPENING_HOURS_SPECIFICATION,
               "priceRange": "$$",
-              "image": "https://spa-landing-vert.vercel.app/images/hero.png",
+              "image": OG_IMAGE.url,
               "sameAs": [
                 "https://www.facebook.com/profile.php?id=100091949245186",
                 "https://www.instagram.com/siluel_guadalajara"

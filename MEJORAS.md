@@ -437,3 +437,37 @@ Ningún `srcset` deja de ofrecer candidatos grandes: lo que cambia es **cuál el
 **Métrica esperada**: ↓ bytes de imagen en la landing y en `/blog` (proxy medible: peso total de las imágenes de las tarjetas, −81 % en la muestra); ↓ LCP y CLS de la home y del índice de blog en móviles y en pantallas con DPR 2; la ↑ de calidad visual es colateral (imágenes menos sobreescaladas).
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, First Load JS 150 kB sin cambios) con `NODE_OPTIONS=--max-old-space-size=1280`; `tsc --noEmit` limpio. Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML servido por `next start`, los bytes reales devueltos por el optimizador de Next y las dimensiones de cada fuente.
 **Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.
+---
+
+## 2026-11-03 — La vista previa al compartir pesa 96 kB en vez de 3,1 MB
+
+**Principio**: entregar a cada consumidor el formato que realmente consume (la misma lógica del `sizes` del 2026-11-02, aplicada al canal social): una vista previa compartida es una imagen que se descarga y se muestra en un móvil, no un asset de escritorio.
+**Por qué**: auditoría de la ruta de compartir (los ítems #4 y #7 siguen bloqueados por material real). Los metadatos de OpenGraph apuntaban a `/images/hero.png`, pero ese canal **no pasa por el optimizador de Next**: Facebook, WhatsApp, LinkedIn y X piden la URL cruda. Medido sobre `next start` local con `User-Agent: facebookexternalhit/1.1`:
+
+| | lo que recibía el rastreador | |
+|---|---|---|
+| URL de `og:image` | `/images/hero.png` → `image/png` | **3 111 418 B** |
+| navegador moderno (AVIF) | `/images/hero.png` vía `/_next/image` | 47 432 B (1920 px) |
+
+Es decir, el visitante de escritorio recibía 47 kB y el rastreador social recibía 3,1 MB por la **misma** página. Además los metadatos declaraban `og:image:width=1200` y `og:image:height=630` mientras el archivo real medía **2048×1064** — dimensiones falsas, que es justo lo que un rastreador usa para decidir el recorte.
+**Cambios** (2 archivos, +21/-6 netas en código + 1 asset nuevo):
+- **`public/images/og-image.jpg`** (nuevo): la **misma** foto ya publicada del hero, recortada a 1200×630 y recomprimida en JPEG q92. Sin dependencias nuevas: se generó con PIL 12.3.0 (ya instalado en el sistema) y se verificó visualmente con el modelo de visión. El recorte se hace a la izquierda de la marca de agua blanca que trae la foto de origen (rombo de 11×8 px en x 1991–2001, y 1005–1012): el recorte resultante no contiene **ningún** píxel blanco puro (comprobado pixel a pixel). Tono de color y sujeto (las herramientas de madera de maderoterapia sobre la espalda) idénticos al original — el tinte verdoso de la foto es del archivo de origen, no de la conversión.
+- **`src/app/layout.tsx`**: nueva constante `OG_IMAGE` (una sola fuente para URL, ancho, alto y alt) y las tres referencias pasan a usarla: `openGraph.images[0]`, `twitter.images[0]` y el campo `image` del JSON-LD `BeautySalon`. Cero cambios en el copy, en los datos de negocio ni en el resto de los metadatos.
+**Medido**:
+
+| | antes | después |
+|---|---|---|
+| peso de `og:image` | 3 111 418 B (PNG 2048×1064) | **96 926 B** (JPEG 1200×630) — **−96,9 %** |
+| dimensiones reales vs declaradas | 2048×1064 vs 1200×630 (**no coincidían**) | **1200×630 vs 1200×630 (coinciden)** |
+| respuesta del servidor | 200 `image/png` | 200 `image/jpeg` |
+| `og:image` que apunta a `hero.png` | 1 | **0** |
+| páginas que emiten la nueva `og:image` | — | **12** (home + índice + 10 artículos) |
+| `hero.png` en el hero de la home | sin cambios | sin cambios (**no se tocó**: el navegador moderno ya recibía AVIF de 47 kB) |
+| First Load JS | 150 kB | 150 kB (sin cambios) |
+
+Build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios) con `NODE_OPTIONS=--max-old-space-size=1280`; `tsc --noEmit` limpio. Verificado sobre el HTML del build y sobre el archivo servido por `next start`.
+**Rama**: mejora-diaria/2026-11-03 (base mejora-diaria/2026-11-02; `main` intacto en 50a86ce)
+**Preview**: pendiente de confirmar tras el push (deployment de la rama `mejora-diaria/2026-11-03`, `target` ≠ production).
+**Métrica esperada**: ↓ peso de la vista previa compartida (de 3,1 MB a 97 kB por vista previa) y ↑ tasa de carga correcta de la miniatura en WhatsApp/Facebook/LinkedIn (proxy: tiempo hasta que la miniatura aparece en el chat, antes dominado por una descarga de 3,1 MB); metadatos `og:image` con dimensiones reales, lo que reduce el recorte incorrecto que hacen los rastreadores. Sin efecto esperado en el LCP de la home: ese canal ya recibía AVIF de 47 kB.
+**Estado**: 🔎 en revisión — pendiente de "publica".
+**Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.
