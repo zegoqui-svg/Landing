@@ -471,3 +471,41 @@ Build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin ca
 **Métrica esperada**: ↓ peso de la vista previa compartida (de 3,1 MB a 97 kB por vista previa) y ↑ tasa de carga correcta de la miniatura en WhatsApp/Facebook/LinkedIn (proxy: tiempo hasta que la miniatura aparece en el chat, antes dominado por una descarga de 3,1 MB); metadatos `og:image` con dimensiones reales, lo que reduce el recorte incorrecto que hacen los rastreadores. Sin efecto esperado en el LCP de la home: ese canal ya recibía AVIF de 47 kB.
 **Estado**: 🔎 en revisión — pendiente de "publica".
 **Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.
+
+---
+
+## 2026-11-04 — El FAQ que Google muestra ya no promete cosas que SILUEL no publica
+
+**Principio**: honestidad de marca + honestidad de datos estructurados (NN/g "Honest UX"; schema.org `FAQPage` es **contenido publicado**, no una nota interna) — un rich result es texto visible en la página de resultados: si promete algo que la marca no puede respaldar, es una promesa rota en la primera pantalla de búsqueda, con más visibilidad que la landing misma.
+**Por qué**: auditoría de las cadenas de contenido del repo (los ítems #4 y #7 siguen bloqueados por material real). El JSON-LD `FAQPage` de `src/app/layout.tsx` es la **única superficie del sitio que nunca se había auditado**: 8 preguntas y respuestas que el sitio no renderiza como HTML visible, pero que Google sí extrae y muestra bajo el título. Al cruzar las 8 respuestas contra `src/data/index.ts`, `src/data/blog.ts`, el tablero `siluel` y la bóveda, **3 de las 8 afirmaban cosas que no están publicadas en ninguna parte**:
+| # | respuesta | afirmación sin respaldo | dónde se publica hoy |
+|---|---|---|---|
+| 3 | "¿Qué incluye el tratamiento post-operatorio?" | "incluye drenaje linfático especializado, masajes suaves y técnicas de recuperación" | **ninguna** — es literalmente el bloque "Qué incluye" que el 2026-10-30 borró del modal por ser inventado |
+| 5 | "¿Dónde está ubicado SILUEL…?" | "Cerca de la zona centro, con fácil acceso y **estacionamiento disponible**" | **ninguna** — no hay dato de estacionamiento en el repo, ni en el tablero, ni en la bóveda |
+| 7 | "¿Qué tipo de faciales ofrecen en SILUEL?" | "Incluye **limpieza profunda, hidratación, tratamiento anti-edad, luminosidad** y más" | **ninguna** — el servicio publicado solo dice "personalizados según tu tipo de piel" |
+
+El caso 3 es el más grave: el 2026-10-30 se eliminó del `BookingModal` un array de cinco promesas **idéntico para los 9 servicios** por no estar respaldado, y la mitad de ese texto seguía publicado — invisible para el auditor del modal — en el JSON-LD que Google muestra. Es el mismo defecto, en la superficie que quedó fuera de la revisión anterior.
+**Cambios** (1 archivo, +3/-3 netas, solo `src/app/layout.tsx`):
+- Pregunta 3: la respuesta pasa a la **descripción publicada** del servicio en `src/data/index.ts` ("Cuidado especializado para una recuperación rápida y segura después de cirugías estéticas, con técnicas suaves y efectivas"), sin enumerar lo que la sesión "incluye".
+- Pregunta 5: se quitan "Cerca de la zona centro, con fácil acceso y estacionamiento disponible". Conserva la dirección publicada (`Plan de Ayala 1859, INT 28, Guadalajara, Jalisco`), que sí viene de `businessInfo`.
+- Pregunta 7: se quitan "limpieza profunda, hidratación, tratamiento anti-edad, luminosidad y más". Conserva lo publicado: faciales personalizados según el tipo de piel, adaptados a las necesidades de tu piel.
+- Las **preguntas no se tocaron** (siguen siendo las 8 mismas), ni el `@type`, ni el resto de las 5 respuestas que sí están respaldadas, ni el JSON-LD `BeautySalon`, ni el copy visible del sitio. Cero cambios visuales.
+**Medido** (sobre el build local, `.next/server/app/index.html`):
+| | antes | después |
+|---|---|---|
+| respuestas con afirmaciones sin respaldo | **3 de 8** | **0 de 8** |
+| "estacionamiento disponible" en `src/` | 1 | **0** |
+| "anti-edad" en `src/` | 1 | **0** |
+| "limpieza profunda" en `src/` | 1 | **0** |
+| "drenaje linfático especializado" en `src/` | 1 | **0** |
+| preguntas (`"@type": "Question"`) en el HTML | 8 | **8** (sin pérdida) |
+| respuestas (`"@type": "Answer"`) en el HTML | 8 | **8** (sin pérdida) |
+| las 3 respuestas corregidas presentes en el HTML | — | 3/3 |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 150 kB | **150 kB** (sin cambios) |
+Las 5 respuestas no tocadas se compararon una por una contra `HEAD`: **sin cambios**. `grep -rn` sobre todo `src/` no encuentra ninguna de las 4 cadenas inventadas, y el HTML generado contiene las 3 respuestas corregidas. `tsc --noEmit` limpio (exit 0).
+**Rama**: mejora-diaria/2026-11-04 (base mejora-diaria/2026-11-03, commit `4409fc0`; `main` intacto en `50a86ce`)
+**Preview**: https://spa-landing-pahba9vss-zegoqui-svgs-projects.vercel.app — deployment `dpl_Ec6UUbG4Nm2yGeLwybwn166KDPGf` del commit de código `ea8a19d` (SHA `ea8a19d997929ff5f61cac78b6c3b4cc1c2ae905`, ref `mejora-diaria/2026-11-04`), estado **READY**, `target` = null (≠ production), rama de producción = `main` sin tocar. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** (confirmado sin seguir redirects) y termina en `vercel.com/login` (título "Login – Vercel"); hace falta iniciar sesión en Vercel para ver la página. El build en Vercel fue verificado por el log de la API: `Compiled successfully`, `Generating static pages (19/19)`, `Build Completed`, **0 errores reales** (la única línea con "error" es el aviso informativo `DYNAMIC_SERVER_USAGE` de la route dinámica `/api/cron/report`, el mismo de las corridas anteriores).
+**Métrica esperada**: ↑ confianza y ↑ tasa de clics desde la página de resultados: el rich result de Google deja de mostrar promesas que la marca no puede respaldar (estacionamiento, anti-edad, "qué incluye"). Proxy: ↑ clics orgánicos desde la SERP (Search Console) y ↓ rebote de quienes llegan desde el FAQ de Google esperando algo que el sitio no publica. Cualitativa hasta tener baseline de Search Console.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios) con `NODE_OPTIONS` sin tope (la máquina tenía 2891 MiB libres, por encima del gate de 2.56 GiB). Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
+**Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.
