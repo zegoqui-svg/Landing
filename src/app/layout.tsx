@@ -181,7 +181,7 @@ export default function RootLayout({
                   "name": "¿Qué incluye el tratamiento post-operatorio?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "El tratamiento post-operatorio incluye drenaje linfático especializado, masajes suaves y técnicas de recuperación diseñadas para acelerar la curación, reducir la inflamación y mejorar los resultados de la cirugía estética."
+                    "text": "Es un cuidado especializado para una recuperación rápida y segura después de cirugías estéticas, con técnicas suaves y efectivas."
                   }
                 },
                 {
@@ -197,7 +197,7 @@ export default function RootLayout({
                   "name": "¿Dónde está ubicado SILUEL Centro de Terapia y Masaje?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Estamos en Plan de Ayala 1859, INT 28, Guadalajara, Jalisco. Cerca de la zona centro, con fácil acceso y estacionamiento disponible."
+                    "text": "Estamos en Plan de Ayala 1859, INT 28, Guadalajara, Jalisco."
                   }
                 },
                 {
@@ -213,7 +213,7 @@ export default function RootLayout({
                   "name": "¿Qué tipo de faciales ofrecen en SILUEL?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Ofrecemos faciales completamente personalizados según tu tipo de piel. Incluye limpieza profunda, hidratación, tratamiento anti-edad, luminosidad y más. Cada facial se adapta a las necesidades específicas de tu piel."
+                    "text": "Ofrecemos faciales completamente personalizados según el tipo de piel. Cada facial se adapta a las necesidades específicas de tu piel."
                   }
                 },
                 {
