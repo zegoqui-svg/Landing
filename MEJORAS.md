@@ -509,3 +509,35 @@ Las 5 respuestas no tocadas se compararon una por una contra `HEAD`: **sin cambi
 **Métrica esperada**: ↑ confianza y ↑ tasa de clics desde la página de resultados: el rich result de Google deja de mostrar promesas que la marca no puede respaldar (estacionamiento, anti-edad, "qué incluye"). Proxy: ↑ clics orgánicos desde la SERP (Search Console) y ↓ rebote de quienes llegan desde el FAQ de Google esperando algo que el sitio no publica. Cualitativa hasta tener baseline de Search Console.
 **Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios) con `NODE_OPTIONS` sin tope (la máquina tenía 2891 MiB libres, por encima del gate de 2.56 GiB). Sin capturas: el Chromium del host no arranca por libs de sistema (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
 **Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. No se tocó ni se promovió a producción ninguno de los dos.
+
+---
+
+## 2026-11-05 — El horario del footer ya sale de la fuente única
+
+**Principio**: una sola fuente de verdad (DRY) + consistencia de la promesa de disponibilidad — el horario que el sitio publica en tres sitios distintos es una promesa operativa repetida; si cada copia se edita por separado, tarde o temprano dos de ellas contradicen a las demás y el sitio ofrece horas que el centro no atiende.
+**Por qué**: candidato de auditoría que el backlog dejó anotado el 2026-11-04 (nota de estado): *"El footer publica el horario en un formato propio… en vez de usar `businessHoursSummary` de `src/data/index.ts`, que es la fuente única que se creó el 2026-11-01. Los valores coinciden hoy, así que no hay contradicción visible, pero son dos representaciones del mismo dato."* Ese día no se corrigió por ser una mejora de una línea demasiado chica; hoy es el ítem acotado que queda sin tomar.
+**El defecto**: existían **tres** representaciones del mismo horario, y solo una era la canónica:
+| superficie | fuente | formato |
+|---|---|---|
+| JSON-LD `openingHoursSpecification` | `businessHours` (array) | `09:00`–`20:00` / `09:00`–`18:00` |
+| Modal de reserva, paso 2 | `businessHoursSummary` | "Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM" |
+| **Footer** | **cadena escrita a mano en el JSX** | **"L-V: 9am - 8pm \| S: 9am - 6pm"** |
+El footer era el **único** que no leía de los datos: su texto no existía en ningún archivo de datos, así que ningún cambio de horario en `src/data/index.ts` lo habría movido. Además su formato abreviado ("9am") es el único del sitio que no usa el formato de 12 h con "AM/PM" del modal, de modo que era también el único que se leía distinto al mismo dato en la misma página.
+**Cambios** (1 archivo, +2/-2 netas, solo `src/components/sections/Footer.tsx`):
+- Import: `import { businessInfo }` → `import { businessInfo, businessHoursSummary }`.
+- El `<span>` del reloj pasa de la cadena literal `"L-V: 9am - 8pm | S: 9am - 6pm"` a `{businessHoursSummary}`.
+**El horario publicado no cambia ni un minuto**: `"L-V: 9am - 8pm | S: 9am - 6pm"` y `"Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM"` describen **exactamente** el mismo horario que el array `businessHours` (lunes a viernes 09:00–20:00, sábado 09:00–18:00). Lo único que cambia es de dónde sale el texto y cómo está escrito.
+**Medido** (sobre el build local, `.next/server/app/index.html`):
+| | antes | después |
+|---|---|---|
+| `"L-V: 9am"` en el HTML y en los chunks | 1 (footer) | **0** |
+| `"Lunes a viernes 9:00 AM - 8:00 PM · Sábados 9:00 AM - 6:00 PM"` en el HTML | 1 (solo el modal) | **2** (modal + footer) |
+| representaciones distintas del mismo dato | 3 | **1** (`businessHours`) |
+| bloques `<li>` del footer | 3 (dirección, teléfono, horario) | 3 (sin pérdida) |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 150 kB | **150 kB** (sin cambios) |
+Verificado sobre el HTML generado que el `<span>` del reloj (`lucide-clock`) contiene la cadena canónica, que el JSON-LD sigue publicando `Mon–Fri 09:00–20:00` y `Sat 09:00–18:00` **sin cambios**, y que dirección y teléfono del footer quedaron verbatim. `tsc --noEmit` limpio (exit 0).
+**Rama**: mejora-diaria/2026-11-05 (base mejora-diaria/2026-11-04, commit `6265982`; `main` intacto en `50a86ce`)
+**Preview**: pendiente de confirmar tras el push.
+**Métrica esperada**: ↓ riesgo de que el footer contradiga al modal o al JSON-LD cuando cambie el horario (el footer ya no puede quedar desactualizado en silencio). En el usuario, el horario del footer pasa de un formato abreviado ("9am") al mismo formato de 12 h del modal, así que las dos menciones del horario en la página se leen igual. Cualitativa: no cambia ningún KPI de conversión; es una mejora de mantenibilidad y de consistencia de la promesa de disponibilidad.
+**Estado**: 🔎 en revisión — pendiente de "publica"; build verde (`npm run build` exit 0, 19/19 páginas, 150 kB First Load JS sin cambios) con `NODE_OPTIONS=--max-old-space-size=1024`: la máquina tenía **1177 MiB** libres, por debajo del gate de 2 GiB del cron, y el swap estaba **agotado** (4095/4095 MiB). Se compiló con el tope de heap como mitigación y el build salió verde al primer intento. Los ~2.5 GB de Chromium que presionan la RAM llevan ~14 h en ejecución bajo un padre vivo (sesión activa ajena), así que **no se tocaron** (regla dura #5). Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo; la verificación fue sobre el HTML renderizado por el propio build de Next.
