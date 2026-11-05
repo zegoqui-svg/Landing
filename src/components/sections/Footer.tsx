@@ -1,6 +1,6 @@
 'use client';
 
-import { businessInfo } from '@/src/data';
+import { businessInfo, businessHoursSummary } from '@/src/data';
 import { Phone, Mail, MapPin, Instagram, Facebook, Clock, Sparkles } from 'lucide-react';
 
 export function Footer() {
@@ -91,7 +91,7 @@ export function Footer() {
               </li>
               <li className="flex items-center">
                 <Clock className="w-5 h-5 mr-3 text-brand-warm" />
-                <span className="text-sm">L-V: 9am - 8pm | S: 9am - 6pm</span>
+                <span className="text-sm">{businessHoursSummary}</span>
               </li>
             </ul>
           </div>
