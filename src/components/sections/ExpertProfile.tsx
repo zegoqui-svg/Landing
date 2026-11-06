@@ -71,8 +71,8 @@ export function ExpertProfile() {
             <div className="grid sm:grid-cols-2 gap-4 mb-10">
               {[
                 "Tratamientos personalizados",
-                "Técnicas certificadas",
-                "Certificación Internacional",
+                "Más de 10 años de experiencia",
+                "Especialista en maderoterapia y drenaje linfático",
                 "Ambiente exclusivo"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-brand-dark/90">

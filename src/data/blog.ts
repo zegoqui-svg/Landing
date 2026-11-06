@@ -95,7 +95,7 @@ Ayuda a eliminar la sangre acumulada bajo la piel.
 
 ## En SILUEL
 
-Contamos con especialistas entrenadas en drenaje linfático post-operatorio.
+Contamos con una especialista entrenada en drenaje linfático post-operatorio.
     `,
   },
   {
