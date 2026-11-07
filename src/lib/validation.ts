@@ -25,8 +25,16 @@ export const leadSchema = z.object({
 
 export type LeadInput = z.infer<typeof leadSchema>;
 
-export const BUSINESS_HOURS = [
-  '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM',
-  '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-  '6:00 PM', '7:00 PM'
-];
+/*
+ * El horario de SILUEL NO se define aqui. La fuente unica es
+ * `businessHours` / `businessHoursSummary` en `src/data/index.ts`, que el
+ * modal de reserva, el JSON-LD y el footer ya leen.
+ *
+ * Antes este archivo exportaba una lista fija `BUSINESS_HOURS`
+ * (10:00 AM - 7:00 PM, igual todos los dias) que contradecía al horario
+ * publicado: ofrecia una hora despues del cierre del sabado y ocultaba la
+ * apertura de las 9:00 AM. Se elimino al pasar el modal a `businessHours`
+ * (2026-11-01), pero el export huerfano se quedo en el repo y seguia
+ * contradiciendo a la fuente unica para el proximo que lo importara.
+ * Si necesitas el horario, importalo de `@/src/data`.
+ */
