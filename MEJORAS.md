@@ -22,7 +22,7 @@ Formato de cada entrada:
 **Por qué**: WCAG 2.1, criterios 2.1.2 (sin trampa de teclado), 2.4.3 (orden del foco) y 2.1.1 (teclado).
 **Cambios**: 1 archivo (`src/components/ui/Modal.tsx`): el panel es el elemento `role="dialog"` y recibe el foco al abrir; Tab/Shift+Tab quedan dentro del modal; Escape cierra; al cerrar, el foco vuelve al control previo.
 **Rama**: mejora-diaria/2026-11-08
-**Preview**: pendiente del deployment del HEAD
+**Preview**: https://spa-landing-4vj2nbzdm-zegoqui-svgs-projects.vercel.app (deployment `dpl_HqgunXVDjuCbKnbiPJ5iZZo33wSh`, READY, `target` ≠ production; ⚠️ pide login de Vercel, `ssoProtection`)
 **Métrica esperada**: menor abandono en el flujo de reserva; más envíos completados por teclado y menor tiempo hasta el primer campo.
 **Estado**: 🔎 en revisión, pendiente "publica"
 
