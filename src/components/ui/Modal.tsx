@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { SPRING_UI } from '@/src/lib/motion';
@@ -19,17 +19,57 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
    * se desplaza; aparece con un cross-fade corto (sólo opacidad).
    */
   const reduceMotion = useReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const focusableSelector =
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      previouslyFocused.current = document.activeElement as HTMLElement | null;
+      const focusTimer = window.setTimeout(() => {
+        const firstFocusable = panelRef.current?.querySelector<HTMLElement>(focusableSelector);
+        (firstFocusable ?? panelRef.current)?.focus();
+      }, 0);
+      return () => {
+        window.clearTimeout(focusTimer);
+        document.body.style.overflow = 'unset';
+        previouslyFocused.current?.focus();
+      };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = 'unset';
+    return undefined;
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !panelRef.current) return;
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter(element => element.offsetParent !== null);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        panelRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const sizes = {
     sm: 'max-w-md',
@@ -52,8 +92,6 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={onClose}
-          role="dialog"
-          aria-modal="true"
         >
           {/* Overlay: §12 "dim to focus" */}
           <motion.div
@@ -66,7 +104,12 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
 
           {/* Modal Content */}
           <motion.div
-            className={`relative w-full ${sizes[size]} bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden`}
+            ref={panelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title || 'Reservar cita'}
+            className={`relative w-full ${sizes[size]} bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden focus:outline-none`}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}

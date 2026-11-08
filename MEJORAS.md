@@ -16,6 +16,16 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-08 — Modal de reserva: foco atrapado, Escape y retorno al CTA
+
+**Principio**: foco visible y predecible — la persona que abre un diálogo debe poder recorrer sus controles, cerrarlo con teclado y volver al botón que lo abrió.
+**Por qué**: WCAG 2.1, criterios 2.1.2 (sin trampa de teclado), 2.4.3 (orden del foco) y 2.1.1 (teclado).
+**Cambios**: 1 archivo (`src/components/ui/Modal.tsx`): el panel es el elemento `role="dialog"` y recibe el foco al abrir; Tab/Shift+Tab quedan dentro del modal; Escape cierra; al cerrar, el foco vuelve al control previo.
+**Rama**: mejora-diaria/2026-11-08
+**Preview**: pendiente del deployment del HEAD
+**Métrica esperada**: menor abandono en el flujo de reserva; más envíos completados por teclado y menor tiempo hasta el primer campo.
+**Estado**: 🔎 en revisión, pendiente "publica"
+
 ## 2026-10-24 — Hero móvil: la foto del hero ahora sí se ve
 
 **Principio**: mobile-first visual — en una landing, la imagen del hero es el argumento de venta antes de leer una sola palabra; si el 70 % del tráfico móvil no la ve, el hero no existe para ese usuario.
