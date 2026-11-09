@@ -64,13 +64,22 @@ export function Testimonials() {
               transition={{ duration: 0.8, delay: index * 0.1 }}
             >
               <Card variant="default" className="bg-white border-0 shadow-xl p-10 relative group">
-                <Quote className="w-12 h-12 text-brand-warm/10 absolute top-8 right-10 group-hover:text-brand-warm/20 transition-colors" />
+                <Quote className="w-12 h-12 text-brand-warm/10 absolute top-8 right-10 group-hover:text-brand-warm/20 transition-colors" aria-hidden="true" />
 
                 <div className="flex flex-col h-full">
-                  {/* Rating */}
-                  <div className="flex gap-1 mb-8">
+                  {/* Rating.
+                      Los SVG de lucide no traen `role` ni `aria-hidden` por
+                      defecto, asi que sin esto el lector de pantalla anuncia
+                      cinco "graficos" sin nombre y la valoracion se pierde.
+                      El grupo lleva un nombre accesible con el valor; las
+                      estrellas de dentro quedan como decorativas. */}
+                  <div
+                    className="flex gap-1 mb-8"
+                    role="img"
+                    aria-label={`Valoracion: ${testimonial.rating} de 5 estrellas`}
+                  >
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-brand-gold fill-brand-gold" />
+                      <Star key={i} className="w-4 h-4 text-brand-gold fill-brand-gold" aria-hidden="true" />
                     ))}
                   </div>
 
@@ -123,7 +132,7 @@ export function Testimonials() {
           <div className="relative z-10 flex flex-col md:flex-row justify-around items-center gap-12 text-white">
             <div className="text-center group">
               <div className="flex justify-center items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-brand-warm fill-brand-warm animate-pulse motion-reduce:animate-none" />
+                <Star className="w-5 h-5 text-brand-warm fill-brand-warm animate-pulse motion-reduce:animate-none" aria-hidden="true" />
                 <span className="text-4xl font-serif font-bold tracking-tight">4.9/5</span>
               </div>
               <p className="text-brand-warm/60 uppercase tracking-widest text-xs font-semibold">Valoración Media</p>

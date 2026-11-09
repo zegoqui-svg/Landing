@@ -15,7 +15,7 @@ export function Footer() {
           {/* Brand Identity Column */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-6">
-              <Sparkles className="w-8 h-8 text-brand-warm" />
+              <Sparkles className="w-8 h-8 text-brand-warm" aria-hidden="true" />
               <h3 className="text-3xl font-serif font-medium tracking-tight">{businessInfo.name}</h3>
             </div>
             <p className="text-brand-warm uppercase tracking-widest text-xs font-bold mb-6">
@@ -77,20 +77,20 @@ export function Footer() {
             <h4 className="text-brand-warm font-serif text-xl border-b border-white/5 pb-4 mb-6">Información</h4>
             <ul className="space-y-5 text-white/70">
               <li className="flex items-start">
-                <MapPin className="w-5 h-5 mr-3 text-brand-warm flex-shrink-0 mt-1" />
+                <MapPin className="w-5 h-5 mr-3 text-brand-warm flex-shrink-0 mt-1" aria-hidden="true" />
                 <span className="text-sm">
                   {businessInfo.address}<br />
                   {businessInfo.city}
                 </span>
               </li>
               <li className="flex items-center">
-                <Phone className="w-5 h-5 mr-3 text-brand-warm" />
+                <Phone className="w-5 h-5 mr-3 text-brand-warm" aria-hidden="true" />
                 <a href={`tel:${businessInfo.phoneE164}`} className="text-sm hover:text-white transition-colors">
                   {businessInfo.phone}
                 </a>
               </li>
               <li className="flex items-center">
-                <Clock className="w-5 h-5 mr-3 text-brand-warm" />
+                <Clock className="w-5 h-5 mr-3 text-brand-warm" aria-hidden="true" />
                 <span className="text-sm">{businessHoursSummary}</span>
               </li>
             </ul>

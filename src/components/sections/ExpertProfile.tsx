@@ -35,7 +35,7 @@ export function ExpertProfile() {
 
             {/* Elegant floating badge */}
             <div className="absolute -bottom-6 -left-6 z-20 bg-brand-dark text-white p-6 rounded-2xl shadow-xl border border-brand-warm/20 flex flex-col items-center">
-              <Award className="w-8 h-8 text-brand-warm mb-2" />
+              <Award className="w-8 h-8 text-brand-warm mb-2" aria-hidden="true" />
               <span className="text-2xl font-serif font-bold leading-none">10+</span>
               <span className="text-[10px] uppercase tracking-widest font-medium opacity-80 mt-1">Años de Experiencia</span>
             </div>
@@ -76,14 +76,14 @@ export function ExpertProfile() {
                 "Ambiente exclusivo"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-brand-dark/90">
-                  <CheckCircle className="w-5 h-5 text-brand-warm" />
+                  <CheckCircle className="w-5 h-5 text-brand-warm" aria-hidden="true" />
                   <span className="text-sm font-medium">{item}</span>
                 </div>
               ))}
             </div>
 
             <div className="material-soft rounded-2xl p-8 relative border border-brand-warm/10 shadow-inner">
-              <Quote className="w-10 h-10 text-brand-warm/20 absolute -top-4 -left-4" />
+              <Quote className="w-10 h-10 text-brand-warm/20 absolute -top-4 -left-4" aria-hidden="true" />
               <p className="text-brand-dark/70 italic text-lg leading-relaxed font-serif relative z-10">
                 {expertInfo.philosophy}
               </p>
