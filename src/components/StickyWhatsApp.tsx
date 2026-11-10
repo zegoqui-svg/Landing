@@ -61,7 +61,7 @@ export function StickyWhatsApp() {
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center justify-center w-full bg-brand-dark text-white text-sm font-medium py-2 min-h-[44px] rounded-lg hover:bg-brand-muted transition-[transform,background-color] duration-300 ease-spring active:scale-[0.97] active:duration-75 motion-reduce:active:scale-100"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
+                  <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />
                   Chatear ahora
                 </a>
               </motion.div>

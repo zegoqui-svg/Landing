@@ -16,6 +16,23 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-10 — Iconos decorativos y estado de las pestañas: la a11y del repo, completa
+
+**Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un icono decorativo no debe anunciarse; un icono que **es** información debe tener nombre propio; y un control que cambia de estado debe anunciar cuál es el activo.
+**Por qué**: continuación de la auditoría de iconos abierta el 2026-11-09, que dejó el patrón a medio hacer y un defecto hermano detectado. El 2026-11-09 corrigió el caso de los iconos **informativos** (la valoración de los testimonios, que se perdía en el lector de pantalla). Quedaban dos lados sin cubrir: los iconos **decorativos** que se anunciaban como ruido, y los controles de filtrado cuyo estado activo no se anunciaba. Causa raíz ya verificada: los SVG de `lucide-react` v0.475.0 **no traen `role` ni `aria-hidden` por defecto**.
+**Cambios** (4 archivos, +22/-16 netas — solo atributos ARIA y `type="button"`, **cero cambios visuales**):
+- `src/components/sections/Services.tsx`: las 4 pestañas de categoría (que filtran los servicios) reciben `aria-pressed={activeCategory === category.id}`, para que el lector de pantalla anuncie cuál está activa — antes el estado activo **no se comunicaba en absoluto**. Sus 4 iconos dinámicos (del `iconMap`), el `ArrowRight` de "Ver detalles" y el `Calendar` de "Reservar Cita" → `aria-hidden="true"` (el texto contiguo ya dice lo mismo). Se añade `type="button"`.
+- `src/components/ui/BookingModal.tsx`: `Calendar`/`Clock`/`MessageCircle`/`Check`/`AlertCircle` decorativos → `aria-hidden="true"`. **Dos excepciones, que no son ruido y por eso llevan nombre propio**: el `Loader2` del estado "Guardando" (`role="img"` + `aria-label="Guardando tu información"` — es el único indicador de que se está guardando) y el `Check` del indicador de pasos (`aria-label="Paso N completado: <etiqueta>"`, porque **reemplaza al número del paso**: sin nombre, el lector de pantalla anunciaba "gráfico" y se perdía qué paso se había completado). El número del paso en su forma normal pasa a `<span aria-hidden="true">`.
+- `src/components/sections/Hero.tsx`: la `Star` del badge "Centro Premium de Terapia y Masaje" → `aria-hidden="true"` (el texto contiguo ya lleva el significado) y el `<svg>` del subrayado de "por dentro" → `aria-hidden="true" focusable="false"`.
+- `src/components/StickyWhatsApp.tsx`: el `MessageCircle` del enlace "Chatear ahora" → `aria-hidden="true"`.
+**Medido**: iconos de `lucide-react` usados en `src/` **32/32** tienen ahora una decisión explícita de accesibilidad (antes 19/32); `<svg>` en el HTML de la home **54/54 con `aria-hidden`** salvo los 4 grupos de valoración, que llevan `role="img"` + nombre accesible; `aria-pressed` en las pestañas 0 → **4** (1 `true` + 3 `false`); `role="img"` con nombre accesible **4** (las valoraciones, intactas del 2026-11-09); en los chunks de cliente aparecen "Guardando tu información" y "Paso N completado". 19/19 páginas; 150 kB First Load JS sin cambios; `tsc --noEmit` limpio; `git diff --check` sin observaciones. Build verde en local (`npm run build` exit 0, `Compiled successfully`, 19/19) con `NODE_OPTIONS=--max-old-space-size=1000` — la máquina bajó a **1.93 GiB libres**, por debajo del gate de 2 GiB del cron, por procesos ajenos (Chromium de sesiones ajenas, `claude`, `node`); no se tocaron esos procesos: se compiló con tope de heap y un watchdog que aborta si la memoria cae de 350 MiB. Sin capturas: el Chromium del host no arranca por libs de sistema.
+**Rama**: mejora-diaria/2026-11-10
+**Preview**: pendiente — ver sección de estado.
+**Métrica esperada**: ↓ ruido en el lector de pantalla (cada icono decorativo que se anuncia es una interrupción en la lectura del CTA y del formulario de reserva) y ↑ comprensión del flujo: la pestaña activa y el paso completado del modal ahora se anuncian. Proxy: auditoría axe/Lighthouse (menos nodos con rol `graphics-document` o sin nombre) y tasa de finalización del flujo de reserva con lector de pantalla.
+**Estado**: 🔎 en revisión, pendiente "publica".
+
+---
+
 ## 2026-11-08 — Modal de reserva: foco atrapado, Escape y retorno al CTA
 
 **Principio**: foco visible y predecible — la persona que abre un diálogo debe poder recorrer sus controles, cerrarlo con teclado y volver al botón que lo abrió.

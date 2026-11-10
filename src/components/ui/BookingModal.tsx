@@ -264,9 +264,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                     'bg-brand-muted/20 text-brand-muted'
                   }`}>
                     {isCompleted && step !== 'submitting' ? (
-                      <Check className="w-5 h-5" />
+                      <Check className="w-5 h-5" aria-label={`Paso ${stepNumber} completado: ${label}`} />
                     ) : (
-                      stepNumber
+                      <span aria-hidden="true">{stepNumber}</span>
                     )}
                   </div>
                   <span className={`hidden sm:inline text-sm ${
@@ -354,7 +354,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                   <h5 className="font-semibold text-brand-dark mb-4">En qué consiste tu tratamiento</h5>
                   <ul className="space-y-2">
                     <li className="flex items-start text-brand-dark/60">
-                      <Check className="w-4 h-4 text-brand-muted mr-2 flex-shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-brand-muted mr-2 flex-shrink-0 mt-0.5" aria-hidden="true" />
                       <span>
                         <span className="font-medium text-brand-dark/80">{chosenCategory.title}</span>
                         {chosenCategory.description ? ` — ${chosenCategory.description}` : ''}
@@ -366,7 +366,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
               <Button onClick={() => setStep('calendar')} fullWidth size="lg">
                 Continuar
-                <Calendar className="w-5 h-5 ml-2" />
+                <Calendar className="w-5 h-5 ml-2" aria-hidden="true" />
               </Button>
 
               <button
@@ -429,7 +429,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 {/* Date Selector */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-brand-warm" /> 1. Elige el día
+                    <Calendar className="w-4 h-4 text-brand-warm" aria-hidden="true" /> 1. Elige el día
                   </label>
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar">
                     {upcomingDays.map((d) => (
@@ -469,7 +469,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                           ? 'bg-brand-dark text-white border-brand-dark shadow-md'
                           : 'border-brand-dark/20 bg-brand-dark/5 text-brand-dark/40'
                       }`}>
-                        <Calendar className="w-5 h-5 mb-1" />
+                        <Calendar className="w-5 h-5 mb-1" aria-hidden="true" />
                         <span className="text-[8px] uppercase font-bold text-center leading-none">Otro<br />día</span>
                       </div>
                     </div>
@@ -479,7 +479,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 {/* Time Grid */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-brand-warm" /> 2. Elige la hora
+                    <Clock className="w-4 h-4 text-brand-warm" aria-hidden="true" /> 2. Elige la hora
                   </label>
                   <p className="text-xs text-brand-dark/60">
                     Horario: {businessHoursSummary}
@@ -520,7 +520,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                   variant="accent"
                   className="flex-[2]"
                 >
-                  <MessageCircle className="w-5 h-5 mr-2" />
+                  <MessageCircle className="w-5 h-5 mr-2" aria-hidden="true" />
                   Reservar por WhatsApp
                 </Button>
               </div>
@@ -530,7 +530,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
           {/* SUBMITTING STATE */}
           {step === 'submitting' && (
             <div className="py-12 flex flex-col items-center justify-center space-y-4">
-              <Loader2 className="w-12 h-12 text-brand-warm animate-spin" />
+              <Loader2 className="w-12 h-12 text-brand-warm animate-spin" role="img" aria-label="Guardando tu información" />
               <p className="text-brand-dark/80">Guardando tu información...</p>
             </div>
           )}
@@ -539,7 +539,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
           {step === 'success' && (
             <div className="py-12 flex flex-col items-center justify-center space-y-4">
               <div className="w-16 h-16 bg-brand-muted/20 rounded-full flex items-center justify-center">
-                <Check className="w-8 h-8 text-brand-muted" />
+                <Check className="w-8 h-8 text-brand-muted" aria-hidden="true" />
               </div>
               <p className="text-brand-dark/80">¡Datos guardados! Abriendo WhatsApp...</p>
             </div>
@@ -549,7 +549,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
           {step === 'error' && (
             <div className="py-12 flex flex-col items-center justify-center space-y-4">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-red-500" />
+                <AlertCircle className="w-8 h-8 text-red-500" aria-hidden="true" />
               </div>
               <p className="text-red-500 text-center">{errorMessage}</p>
               <Button onClick={() => setStep('calendar')} variant="outline">

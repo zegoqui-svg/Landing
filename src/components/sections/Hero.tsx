@@ -46,7 +46,7 @@ export function Hero({ onBookClick }: HeroProps) {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-warm/10 text-brand-dark rounded-full text-sm font-medium mb-8 border border-brand-warm/20">
-              <Star className="w-4 h-4 text-brand-warm fill-brand-warm" />
+              <Star className="w-4 h-4 text-brand-warm fill-brand-warm" aria-hidden="true" />
               <span>Centro Premium de Terapia y Masaje</span>
             </div>
 
@@ -54,7 +54,7 @@ export function Hero({ onBookClick }: HeroProps) {
               Elige sentirte bien, <br />
               <span className="text-brand-warm italic relative inline-block">
                 por dentro
-                <svg className="absolute w-full h-3 -bottom-1 left-0 text-brand-muted/30" viewBox="0 0 100 10" preserveAspectRatio="none">
+                <svg className="absolute w-full h-3 -bottom-1 left-0 text-brand-muted/30" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
                   <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="2" fill="none" />
                 </svg>
               </span> y por fuera

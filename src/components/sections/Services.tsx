@@ -57,13 +57,18 @@ export function Services({ onServiceSelect }: ServicesProps) {
             return (
               <button
                 key={category.id}
+                type="button"
                 onClick={() => setActiveCategory(category.id)}
+                aria-pressed={activeCategory === category.id}
                 className={`flex items-center gap-3 px-8 py-4 rounded-full text-sm font-medium transition-all duration-300 border group ${activeCategory === category.id
                   ? 'bg-brand-dark text-white border-brand-dark shadow-xl scale-105'
                   : 'bg-white text-brand-dark/70 border-brand-dark/5 hover:border-brand-dark/20 hover:bg-white hover:text-brand-dark hover:shadow-md'
                   }`}
               >
-                <Icon className={`w-5 h-5 ${activeCategory === category.id ? 'text-brand-warm' : 'text-brand-muted group-hover:text-brand-dark'}`} />
+                <Icon
+                  aria-hidden="true"
+                  className={`w-5 h-5 ${activeCategory === category.id ? 'text-brand-warm' : 'text-brand-muted group-hover:text-brand-dark'}`}
+                />
                 <span className="tracking-wide">{category.title.replace(/[\u{1F300}-\u{1F9FF}]/gu, '')}</span>
               </button>
             );
@@ -109,7 +114,7 @@ export function Services({ onServiceSelect }: ServicesProps) {
                   />
                   <div className="absolute bottom-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                     <span className="inline-flex items-center text-white text-sm font-medium">
-                      Ver detalles <ArrowRight className="w-4 h-4 ml-2" />
+                      Ver detalles <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
                     </span>
                   </div>
                 </div>
@@ -131,7 +136,7 @@ export function Services({ onServiceSelect }: ServicesProps) {
                     variant="accent"
                     className="mt-auto group-hover:scale-[1.02] transition-transform duration-300"
                   >
-                    <Calendar className="w-4 h-4 mr-2" />
+                    <Calendar className="w-4 h-4 mr-2" aria-hidden="true" />
                     Reservar Cita
                   </Button>
                 </div>
