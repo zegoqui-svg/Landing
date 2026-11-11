@@ -389,9 +389,16 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 <h5 className="font-semibold text-brand-dark text-lg">Tus datos de contacto</h5>
                 
                 <div>
-                  <label className="block text-sm font-medium text-brand-dark/80 mb-1">Nombre completo *</label>
+                  {/* `htmlFor` + `id`: sin esta pareja el lector de pantalla
+                      anuncia el campo como "campo de texto" sin nombre
+                      (WCAG 1.3.1 / 4.1.2). `autoComplete` permite al navegador
+                      autocompletar nombre y telefono (WCAG 1.3.5, AA). */}
+                  <label htmlFor="booking-name" className="block text-sm font-medium text-brand-dark/80 mb-1">Nombre completo *</label>
                   <input
+                    id="booking-name"
+                    name="name"
                     type="text"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ej: María García"
@@ -400,9 +407,13 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-brand-dark/80 mb-1">Teléfono *</label>
+                  <label htmlFor="booking-phone" className="block text-sm font-medium text-brand-dark/80 mb-1">Teléfono *</label>
                   <input
+                    id="booking-phone"
+                    name="phone"
                     type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Ej: 33 1234 5678"
@@ -411,9 +422,12 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-brand-dark/80 mb-1">Email (opcional)</label>
+                  <label htmlFor="booking-email" className="block text-sm font-medium text-brand-dark/80 mb-1">Email (opcional)</label>
                   <input
+                    id="booking-email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Ej: maria@email.com"
@@ -551,7 +565,10 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="w-8 h-8 text-red-500" aria-hidden="true" />
               </div>
-              <p className="text-red-500 text-center">{errorMessage}</p>
+              {/* `role="alert"`: sin una region viva el lector de pantalla no
+                  anuncia el motivo del fallo y el usuario no sabe que
+                  corrigio nada (WCAG 4.1.3). */}
+              <p role="alert" aria-live="assertive" className="text-red-500 text-center">{errorMessage}</p>
               <Button onClick={() => setStep('calendar')} variant="outline">
                 Volver e intentar de nuevo
               </Button>
