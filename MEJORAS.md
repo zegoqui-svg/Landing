@@ -16,6 +16,21 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-11 — El formulario de reserva: campos sin nombre y error que no se anuncia
+
+**Principio**: nombre, rol y valor, y estado del formulario — un campo que no tiene etiqueta no se puede identificar, y un error que no se anuncia no se puede corregir.
+**Por qué**: WCAG 2.1, criterios 1.3.1 (Info y Relaciones), 3.3.2 (Etiquetas o Instrucciones), 1.3.5 (Identificar el propósito del input, nivel AA) y 4.1.3 (Mensajes de Estado). El modal ya tenía foco atrapado, Escape y retorno al CTA (2026-11-08) y atributos ARIA en los iconos (2026-11-10), pero **el formulario en sí nunca se auditó**: era la única superficie del repo con `<input>`.
+**Causa raíz**: los tres campos de texto del paso 2 del modal tenían un `<label>` visual **sin `htmlFor`** y los `<input>` **sin `id`**. El `<label>` no está anidado dentro del `<input>` (HTML inválido) y no hay asociación explícita, así que el lector de pantalla anuncia "campo de texto, sin nombre" en los tres: nombre, teléfono y email son indistinguibles al navegar con teclado o lector de pantalla. El error de validación se pintaba en un `<p>` sin región viva, así que al fallar el envío **no se anunciaba nada**: el usuario de lector de pantalla oía un botón que no hacía nada y ningún motivo.
+**Cambios** (1 archivo, +21/-4 netas — **cero cambios visuales**, solo atributos):
+- `src/components/ui/BookingModal.tsx`: los 3 campos de texto reciben `id` (`booking-name`, `booking-phone`, `booking-email`) y su `<label>` recibe el `htmlFor` correspondiente; se añaden `name` y `autoComplete` (`name` / `tel` / `email`) para que el navegador autocomplete (WCAG 1.3.5) e `inputMode="tel"` en el teléfono para el teclado numérico en móvil. El mensaje de error pasa a `role="alert"` + `aria-live="assertive"`, para que se anuncie al fallar la validación (WCAG 4.1.3).
+**Medido**: en los chunks de cliente, `<input>` del formulario con `id` **0 → 3**; `<label>` con `htmlFor` **0 → 3** (parejas 1:1 verificadas: `booking-name`/`booking-email`/`booking-phone`); `autoComplete` **0 → 3**; `role="alert"` en el modal **0 → 1**; `aria-live` **0 → 1**. 19/19 páginas; 151 kB First Load JS sin cambios; `tsc --noEmit` limpio; `git diff --check` sin observaciones. Build verde en local (`npm run build` exit 0, `Compiled successfully`, `Generating static pages (19/19)`) con `NODE_OPTIONS=--max-old-space-size=900` — la máquina bajó a **1.14 GiB libres**, por debajo del gate de 2 GiB del cron, por procesos ajenos; no se tocaron esos procesos: se compiló con tope de heap y un watchdog que aborta si la memoria cae de 350 MiB. Sin capturas: el Chromium del host no arranca por libs de sistema y el cron no puede usar sudo.
+**Rama**: mejora-diaria/2026-11-11
+**Preview**: https://spa-landing-13wkn7p4p-zegoqui-svgs-projects.vercel.app — deployment `dpl_41ksWaxw77SEWanmUDM3FU6a4wX7` (SHA `90150a6`, `state` READY, `target` = null ≠ production; el `production` sigue en `dpl_DTpxebR37GcaFjH2FL4hK7kqJL3H` / SHA `50a86ce`, sin tocar). El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** y termina en `vercel.com/login` (HTTP 200 **sin** contenido de SILUEL: los marcadores "Reservar" y "SILUEL" no aparecen en el body). **Hace falta iniciar sesión en Vercel para verla.**
+**Métrica esperada**: ↑ tasa de envíos completados del formulario de reserva (antes un usuario de lector de pantalla podía fallar tres veces sin saber por qué, y escribir el email en el campo del teléfono). Proxy: Lighthouse/axe (0 inputs sin nombre accesible, 0 mensajes de error sin región viva) y tasa de conversión del paso 2 → `lead_captured`.
+**Estado**: 🔎 en revisión, pendiente "publica".
+
+---
+
 ## 2026-11-10 — Iconos decorativos y estado de las pestañas: la a11y del repo, completa
 
 **Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un icono decorativo no debe anunciarse; un icono que **es** información debe tener nombre propio; y un control que cambia de estado debe anunciar cuál es el activo.
