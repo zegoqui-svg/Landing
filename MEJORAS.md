@@ -16,6 +16,38 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-12 — El día y la hora elegidos ya se anuncian
+
+**Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un control que cambia de estado debe anunciar cuál está activo; y un control que solo se distingue por color no comunica nada a quien no ve el color.
+**Por qué**: la "candidata directa" que el backlog dejó anotada el 2026-11-11. La auditoría de a11y cubrió los iconos (2026-11-09, 2026-11-10) y el formulario (2026-11-11), pero **no había mirado los botones de día y hora** del paso 2 del modal: son la versión visual de las pestañas de categoría de `Services.tsx`, que ya se corrigieron con `aria-pressed` ese mismo día. El patrón era el mismo, en otra superficie.
+**Causa raíz**: los 7 botones de día y los 11 de hora (lunes a viernes) se distinguían del resto **solo por el color** (`bg-brand-dark text-white` frente a `bg-white text-brand-dark/70`). El lector de pantalla anunciaba botones idénticos, sin decir cuál estaba elegido: quien navega con lector de pantalla **no podía saber qué día ni qué hora había reservado**. Además los botones de día **no tenían `type="button"`**, así que dentro del `<form>` del modal podían disparar el envío. Y el input nativo de fecha ("Otro día") —que va encima de un div con estilo, con `opacity-0`— **no tenía nombre accesible**: se anunciaba como "campo de fecha, en blanco" sin decir para qué era. Los dos `<label>` que titulaban "1. Elige el día" y "2. Elige la hora" eran `<label>` **sin `htmlFor` y sin ningún control asociado** — HTML inválido, el mismo defecto que el 2026-11-11 corrigió en los campos de texto.
+**Cambios** (1 archivo, +38/-6 netas — **solo atributos ARIA y `type="button"`, cero cambios visuales**):
+- `src/components/ui/BookingModal.tsx`: los 7 botones de día reciben `aria-pressed={date === d.fullDate}` y `type="button"`; los 11 de hora reciben `aria-pressed={time === hour}`. Los dos grupos se envuelven en `role="group"` con nombre propio (`"Días disponibles para reservar"` / `"Horarios disponibles para reservar"`), para que el contexto se anuncie al entrar en el grupo (WCAG 1.3.1). El input nativo de fecha recibe `aria-label="Elegir otro día"`. Los dos `<label>` huérfanos de los títulos pasan a `<div>`: no labelan ningún control, así que como `<label>` no cumplían nada (WCAG 3.3.2 / 4.1.2).
+- **El div con estilo de "Otro día" NO lleva `role="button"`**: es decorativo, y el control real es el input nativo que va encima (`opacity-0`). Ponerle rol de botón crearía un control fantasma (dos controles para la misma acción, el segundo sin foco). Queda documentado en un comentario para que el próximo no lo "complete".
+- **No se tocó** el selector de servicios del paso 1: sus botones no son un conmutador sino una **navegación** (al pulsarlos se avanza a la pantalla de confirmación, que ya nombra el servicio elegido), así que `aria-pressed` sería semánticamente incorrecto ahí.
+**Medido** (comparación del **código fuente** del commit base `origin/mejora-diaria/2026-11-11` contra el actual, y sobre los chunks del build local):
+| | antes | después |
+|---|---|---|
+| botones de día con `aria-pressed` | 0 | **1** (los 7 botones reciben el atributo) |
+| botones de hora con `aria-pressed` | 0 | **1** (los 11 botones reciben el atributo) |
+| `role="group"` | 0 | **2** (grupo de días + grupo de horas) |
+| `aria-label` de los grupos | 0 | **2** |
+| `aria-label` del input de fecha | 0 | **1** ("Elegir otro día") |
+| `<label>` sin `htmlFor` huérfanos | 2 | **0** |
+| `<label>` con `htmlFor` (los 3 campos) | 3 | **3** (sin pérdida) |
+| `aria-pressed` totales en el bundle | 1 (pestañas de Servicios) | **3** (pestañas + día + hora) |
+| clases CSS eliminadas | — | **0** |
+| clases CSS añadidas | — | **0** |
+| texto visible del modal | — | **sin cambios** (el único delta es un comentario JSX) |
+19/19 páginas; 151 kB First Load JS sin cambios; `tsc --noEmit` limpio (exit 0); `git diff --check` sin observaciones. Build verde en local (`npm run build` exit 0, `Compiled successfully`, `Generating static pages (19/19)`) con `NODE_OPTIONS=--max-old-space-size=1024` y un watchdog que aborta si la RAM baja de 350 MiB — la máquina bajó a **1476 MiB libres**, por debajo del gate de 2 GiB del cron, por ~2 GB de Chromium de sesiones ajenas y el swap al 84 %; **no se tocaron esos procesos** (regla dura #5). Sin capturas: no hay binario de Chromium en el PATH del host y el cron no puede usar sudo.
+**Rama**: mejora-diaria/2026-11-12 (base mejora-diaria/2026-11-11, commit `d0eac9e`; `main` intacto en `50a86ce`) · commit de código `32a0d0f`
+**Preview**: https://spa-landing-pxvbs6fyu-zegoqui-svgs-projects.vercel.app — deployment `dpl_EDRSYssWtFExpWDrWSqMTPZPhFt7` del commit de código `32a0d0f` (SHA `32a0d0ffcb6fe535827c07f514d22b5100967c0a`, ref `mejora-diaria/2026-11-12`), estado **READY**, `target` = null (≠ production); la producción de `spa-landing` sigue en `dpl_DTpxebR37GcaFjH2FL4hK7kqJL3H` (sha `50a86ce`, ref `main`), intacta. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** (verificado sin seguir redirects) y termina en `vercel.com/login` (HTTP 200, título "Login – Vercel", **sin contenido de SILUEL**). **Hace falta iniciar sesión en Vercel para ver la página.** Build en Vercel verificado por su log de API: `Compiled successfully`, `Generating static pages (19/19)`, `Build Completed`, **sin "Failed to compile"**.
+**Métrica esperada**: ↑ completitud del flujo de reserva con lector de pantalla (hoy el día y la hora elegidos **no se anunciaban**: la clienta podía "reservar" y no saber qué había pedido), y ↑ understanding de la disponibilidad. Proxy: ↓ mensajes de WhatsApp con fecha/hora equivocada o ausente (el endpoint `/api/leads` ya exige día + hora válidos desde el 2026-11-01), y auditoría axe/Lighthouse: 0 botones de estado sin `aria-pressed`, 0 controles de fecha sin nombre accesible. Cualitativa hasta tener baseline de analítica por paso del modal.
+**Estado**: 🔎 en revisión, pendiente "publica".
+**Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. Se verificó que el auto-preview del hermano es `target` = null / READY sobre el mismo SHA y que **su** producción sigue en `dpl_HM8ZsZfBo2sR99syyNAhDXcFaLi7` (sha `50a86ce`, ref `main`): no se invocó ninguna escritura sobre ese proyecto.
+
+---
+
 ## 2026-11-11 — El formulario de reserva: campos sin nombre y error que no se anuncia
 
 **Principio**: nombre, rol y valor, y estado del formulario — un campo que no tiene etiqueta no se puede identificar, y un error que no se anuncia no se puede corregir.
