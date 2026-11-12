@@ -442,13 +442,27 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
                 {/* Date Selector */}
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
+                  <div className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-brand-warm" aria-hidden="true" /> 1. Elige el día
-                  </label>
-                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar">
+                  </div>
+                  {/* `role="group"` + nombre: el grupo de botones de dia es una
+                      lista de opciones y su contexto ("Elige el dia") se
+                      anuncia al entrar en el grupo (WCAG 1.3.1 / 4.1.2). */}
+                  <div
+                    role="group"
+                    aria-label="Días disponibles para reservar"
+                    className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar"
+                  >
                     {upcomingDays.map((d) => (
                       <button
                         key={d.fullDate}
+                        type="button"
+                        // `aria-pressed`: el dia elegido se distinguia SOLO por
+                        // color, asi que el lector de pantalla anunciaba
+                        // botones identicos sin decir cual estaba elegido
+                        // (WCAG 4.1.2). Es el mismo patron que se corrigio en
+                        // las pestanas de categoria de `Services.tsx`.
+                        aria-pressed={date === d.fullDate}
                         onClick={() => {
                           setDate(d.fullDate);
                           setTime('');
@@ -465,8 +479,13 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                       </button>
                     ))}
                     <div className="flex-shrink-0 relative">
+                      {/* El input nativo de fecha va encima del div con
+                          estilo (opacity 0), asi que necesita nombre propio:
+                          sin el se anunciaba como "campo de fecha, en blanco"
+                          y no se sabia para que era (WCAG 1.3.1 / 4.1.2). */}
                       <input
                         type="date"
+                        aria-label="Elegir otro día"
                         value={date}
                         min={new Date().toLocaleDateString('en-CA')}
                         onChange={(e) => {
@@ -478,6 +497,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                         }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
+                      {/* El div con estilo es solo decoracion: el control real
+                          es el input nativo que va encima (opacity 0). Por eso
+                          aqui NO va `role="button"` — seria un control
+                          fantasma. El estado del dia elegido lo anuncia el
+                          `aria-pressed` de los botones de la lista. */}
                       <div className={`w-16 h-20 flex flex-col items-center justify-center rounded-xl border border-dashed transition-all ${
                         date && !upcomingDays.find(d => d.fullDate === date)
                           ? 'bg-brand-dark text-white border-brand-dark shadow-md'
@@ -492,18 +516,26 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
                 {/* Time Grid */}
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
+                  <div className="text-sm font-medium text-brand-dark/80 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-brand-warm" aria-hidden="true" /> 2. Elige la hora
-                  </label>
+                  </div>
                   <p className="text-xs text-brand-dark/60">
                     Horario: {businessHoursSummary}
                   </p>
                   {availableSlots && availableSlots.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <div
+                      role="group"
+                      aria-label="Horarios disponibles para reservar"
+                      className="grid grid-cols-2 sm:grid-cols-5 gap-2"
+                    >
                       {availableSlots.map((hour) => (
                         <button
                           key={hour}
                           type="button"
+                          // `aria-pressed`: la hora elegida se distinguia SOLO
+                          // por color (WCAG 4.1.2). Mismo patron que las
+                          // pestanas de categoria de `Services.tsx`.
+                          aria-pressed={time === hour}
                           onClick={() => setTime(hour)}
                           className={`py-3 text-xs font-semibold rounded-lg border transition-all duration-200 ${
                             time === hour
