@@ -16,6 +16,42 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-13 — El modal ya nombra lo que muestra y anuncia en qué paso vas
+
+**Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) y estado del proceso (WCAG 1.3.1) — un diálogo debe decir **qué está mostrando ahora**, y un indicador de progreso debe decir **en qué paso se está**: el rol `dialog` sin nombre coherente anuncia una cosa mientras muestra otra, y un indicador puramente visual no existe para quien no ve la pantalla.
+**Por qué**: auditoría de a11y **por superficie**, el criterio que las corridas del 2026-11-09 al 2026-11-12 vinieron cerrando (la a11y del repo se dio por cerrada el 2026-11-10 con "iconos 32/32", pero el formulario —la única parte con `<input>`— nunca se había mirado, y los botones de día/hora tampoco). Quedaba sin auditar la superficie del **`role="dialog"`** en sí: el `Modal` de `src/components/ui/Modal.tsx`. El backlog la tenía anotada como candidata desde el 2026-11-12.
+**Causa raíz** (dos defectos encadenados, en la misma superficie):
+1. **El diálogo tenía un nombre fijo**: `aria-label={title || 'Reservar cita'}`. Pero `BookingModal` abre el `Modal` **sin `title`** (es el único consumidor: `grep` de `<Modal` en `src/` → 1 uso), así que el nombre accesible era siempre "Reservar cita" en los **cuatro** estados del modal: selector de tratamiento, datos de contacto, guardando y error. La clienta que oía "diálogo, Reservar cita" no sabía si estaba eligiendo un tratamiento o confirmando sus datos. Peor: el `Modal` ya tenía el `title` como encabezado visible (`<h3>`), pero **sin `id`**, así que el encabezado no se podía usar como nombre accesible.
+2. **El indicador de pasos era puramente visual**: los tres rótulos ("Servicio", "Tus Datos", "Confirmar") están en un `<span className="hidden sm:inline">` — en móvil **no existen en el árbol de accesibilidad** — y ningún elemento marcaba el paso activo: el estado se comunicaba **solo por color** (`bg-brand-dark` vs `bg-brand-muted`), el mismo patrón que el 2026-11-12 corrigió en los botones de día y hora.
+**Cambios** (2 archivos, +76/-10 netas — **solo atributos ARIA y texto para lector de pantalla, cero cambios visuales**):
+- **`src/components/ui/Modal.tsx`**: nueva prop opcional `ariaLabel`; el `role="dialog"` pasa a `aria-labelledby={title ? 'modal-title' : undefined}` + `aria-label={title ? undefined : ariaLabel || 'Reservar cita'}`, y el `<h3>` del encabezado recibe `id="modal-title"`. Así, **cuando hay encabezado visible, el nombre accesible es el propio encabezado** (WCAG 2.4.6 / 4.1.2), no una cadena aparte que puede desincronizarse; y cuando no lo hay, quien lo llama decide el nombre. El fallback ("Reservar cita") se conserva para no romper a ningún consumidor futuro.
+- **`src/components/ui/BookingModal.tsx`**: (a) el nombre del diálogo se **deriva del estado** (`dialogLabel`): "Reservar cita: elige el tratamiento" / "Reservar cita: <nombre del servicio>" / "Reservar cita: tus datos y disponibilidad" / "Reservar cita: guardando tus datos" / "Reservar cita: datos guardados" / "Reservar cita: no se pudo guardar". Se **deriva**, no se fija con `useEffect`, por el mismo criterio del 2026-11-28: con estado en `useEffect` el primer render (SSR e hidratación) ya muestra la rama equivocada. (b) El indicador de pasos pasa a ser un `role="group"` con `aria-label="Pasos de la reserva"`; el paso activo lleva `aria-current="step"`; y cada paso gana un `<span className="sr-only sm:hidden">` **hermano** del rótulo visible (no hijo) que nombra "Paso N de 3: <etiqueta>" en móvil.
+**Por qué el `sr-only` va como hermano y no dentro del `<span hidden sm:inline>`**: `hidden` es `display:none`, y `sr-only` no redefine `display` — un hijo de un padre `display:none` **tampoco** se anuncia. Metido dentro, el nombre del paso se habría perdido justo en móvil, que es donde el rótulo visible está oculto. Como hermano con `sm:hidden`, en móvil existe el nombre para lector de pantalla y en escritorio existe el rótulo visible: **el nombre se lee una sola vez en cualquier viewport**.
+**Medido** (render SSR real del componente con `renderToStaticMarkup`, ejecutando el JSX de producción — no una maqueta):
+| | antes | después |
+|---|---|---|
+| nombre del diálogo (paso 1, con servicio) | "Reservar cita" (fijo) | **"Reservar cita: Reductivos"** |
+| nombre del diálogo (paso 1, selector) | "Reservar cita" (fijo) | **"Reservar cita: elige el tratamiento"** |
+| nombres distintos del diálogo según el estado | **1** | **6** |
+| `aria-labelledby` apuntando al `<h3>` visible | 0 | **1** (`modal-title` → `<h3 id="modal-title">`) |
+| `aria-current="step"` | 0 | **1** (exactamente el paso activo) |
+| `role="group"` con nombre en el indicador de pasos | 0 | **1** ("Pasos de la reserva") |
+| nombres de paso disponibles en móvil | **0** (rótulos `hidden`) | **3** ("Paso 1 de 3: Servicio, en curso" · "Paso 2 de 3: Tus Datos" · "Paso 3 de 3: Confirmar") |
+| `.sr-only` en el CSS generado | — | presente (`position:absolute;width:1px;…`) + variante `sm:hidden` |
+| `aria-current` en los chunks de cliente | 0 | **1** |
+| "Reservar cita: elige el tratamiento" en los chunks | 0 | **1** |
+| `aria-label={title || 'Reservar cita'}` en `src/` | 1 | **0** |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 151 kB | **151 kB** (sin cambios) |
+19/19 páginas; `tsc --noEmit` limpio (exit 0); `git diff --check` sin observaciones. Build verde en local (`npm run build` exit 0, `Compiled successfully`, `Generating static pages (19/19)`) con `NODE_OPTIONS=--max-old-space-size=1024` y un watchdog que aborta si la RAM baja de 350 MiB — la máquina bajó a **1443 MiB libres**, por debajo del gate de 2 GiB del cron, por ~1.6 GB de Chromium de sesiones ajenas (3 procesos con 3,4 días de ejecución) y el swap al 83 %; **no se tocaron esos procesos** (regla dura #5). Sin capturas: no hay binario de Chromium en el PATH del host y el cron no puede usar sudo. La verificación fue sobre el **render SSR real** de los componentes de producción (`react-dom/server` sobre el JSX real, con el `next.config.js` cargado y un stub de `next/image` fuera del runtime de Next).
+**Rama**: mejora-diaria/2026-11-13 (base mejora-diaria/2026-11-12, commit `069d16f`; `main` intacto en `50a86ce`) · commit de código `e58cbbb`
+**Preview**: https://spa-landing-2v1dx7tim-zegoqui-svgs-projects.vercel.app — deployment `dpl_HojVobnZDMJrqWAcyFvgCx1LvKRj` del commit de código `e58cbbb` (SHA `e58cbbbcc36cc83aeae2dc93630981bbc3aefc61`, ref `mejora-diaria/2026-11-13`), estado **READY**, `target` = null (≠ production); la producción de `spa-landing` sigue en `dpl_DTpxebR37GcaFjH2FL4hK7kqJL3H` (sha `50a86ce`, ref `main`), intacta. El proyecto tiene `ssoProtection: {"deploymentType": "all_except_custom_domains"}`: la URL responde **302 → `vercel.com/sso-api`** (verificado sin seguir redirects) y termina en `vercel.com/login` (HTTP 200, título "Login – Vercel", **0 apariciones** de "Reservar" y de "SILUEL" en el body). **Hace falta iniciar sesión en Vercel para ver la página.** Build en Vercel verificado por su log de API: `Compiled successfully`, `Generating static pages (19/19)`, `Build Completed in /vercel/output [1m]`, **sin "Failed to compile"**.
+**Métrica esperada**: ↑ comprensión del flujo de reserva con lector de pantalla (antes el diálogo anunciaba siempre lo mismo y el indicador de pasos **no existía** en móvil; ahora el nombre dice qué se está haciendo y el paso activo se anuncia). Proxy: auditoría axe/Lighthouse (0 `role="dialog"` sin nombre coherente con su contenido, 0 indicadores de progreso sin `aria-current`) y ↓ abandono entre el paso 1 y el 2 del modal (evento de apertura → paso 2). Cualitativa hasta tener baseline de analítica por paso del modal.
+**Estado**: 🔎 en revisión, pendiente "publica".
+**Nota operativa**: el repo `Landing` está enlazado a dos proyectos de Vercel (`spa-landing` y `ash-guard-vision`), así que cada push a la rama genera un preview en ambos. Se verificó que el auto-preview del hermano es `target` = null / READY sobre el mismo SHA y que **su** producción sigue en `dpl_HM8ZsZfBo2sR99syyNAhDXcFaLi7` (sha `50a86ce`, ref `main`): no se invocó ninguna escritura sobre ese proyecto.
+
+---
+
 ## 2026-11-12 — El día y la hora elegidos ya se anuncian
 
 **Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un control que cambia de estado debe anunciar cuál está activo; y un control que solo se distingue por color no comunica nada a quien no ve el color.
