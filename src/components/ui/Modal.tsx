@@ -10,10 +10,17 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   title?: string;
+  /**
+   * Nombre accesible del diálogo cuando no hay `title` visible.
+   * El nombre debe describir lo que el modal muestra AHORA, no el
+   * propósito general: un diálogo que nombra una sola cosa mientras
+   * muestra otra no cumple WCAG 4.1.2 (nombre, rol y valor).
+   */
+  ariaLabel?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalProps) {
+export function Modal({ isOpen, onClose, children, title, ariaLabel, size = 'lg' }: ModalProps) {
   /*
    * §14 Reduced motion: con movimiento reducido el modal no escala ni
    * se desplaza; aparece con un cross-fade corto (sólo opacidad).
@@ -108,7 +115,13 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
             tabIndex={-1}
             role="dialog"
             aria-modal="true"
-            aria-label={title || 'Reservar cita'}
+            // El nombre accesible se ancla al encabezado visible cuando hay
+            // `title` (`aria-labelledby`), y cae a `aria-label` cuando el
+            // diálogo no tiene encabezado. Antes el `aria-label` era un
+            // texto fijo ("Reservar cita") que describía el modal entero,
+            // no lo que mostraba en cada paso (WCAG 4.1.2).
+            aria-labelledby={title ? 'modal-title' : undefined}
+            aria-label={title ? undefined : ariaLabel || 'Reservar cita'}
             className={`relative w-full ${sizes[size]} bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden focus:outline-none`}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
@@ -119,7 +132,7 @@ export function Modal({ isOpen, onClose, children, title, size = 'lg' }: ModalPr
             {/* Header */}
             {title && (
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-900 font-serif">{title}</h3>
+                <h3 id="modal-title" className="text-xl font-semibold text-gray-900 font-serif">{title}</h3>
                 <button
                   type="button"
                   onClick={onClose}

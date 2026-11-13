@@ -106,6 +106,31 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
     onClose();
   };
 
+  /*
+   * Nombre accesible del diálogo (WCAG 4.1.2): describe lo que el modal
+   * muestra AHORA. Antes el `Modal` usaba un texto fijo ("Reservar cita")
+   * en los cuatro estados —selector de servicio, datos, guardando y
+   * error—, así que el lector de pantalla anunciaba siempre lo mismo.
+   */
+  const dialogLabel = (() => {
+    switch (step) {
+      case 'service':
+        return isPicking
+          ? 'Reservar cita: elige el tratamiento'
+          : `Reservar cita: ${chosenService?.name ?? 'confirma el tratamiento'}`;
+      case 'calendar':
+        return 'Reservar cita: tus datos y disponibilidad';
+      case 'submitting':
+        return 'Reservar cita: guardando tus datos';
+      case 'success':
+        return 'Reservar cita: datos guardados';
+      case 'error':
+        return 'Reservar cita: no se pudo guardar';
+      default:
+        return 'Reservar cita';
+    }
+  })();
+
   const validateForm = (): boolean => {
     if (!name.trim() || name.length < 2) {
       setErrorMessage('Ingresa tu nombre completo');
@@ -244,10 +269,26 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} size="xl" ariaLabel={dialogLabel}>
       <div className="bg-brand-light">
         <div className="px-6 py-4 bg-brand-white border-b border-brand-dark/10">
-          <div className="flex items-center justify-center space-x-4">
+          {/* Indicador de pasos (WCAG 4.1.2 / 1.3.1).
+              Antes era PUREAMENTE visual: los rótulos ("Servicio", "Tus
+              Datos", "Confirmar") son `hidden sm:inline`, así que en móvil
+              no existían en el árbol de accesibilidad, y ningún elemento
+              marcaba el paso activo. Ahora:
+                - el grupo es una `role="group"` con nombre, para que el
+                  contexto se anuncie al entrar;
+                - el paso activo lleva `aria-current="step"`;
+                - los pasos completados se anuncian por su icono `Check`;
+                - cada rótulo tiene un `<span className="sr-only">` con el
+                  nombre del paso, para que en móvil (donde el rótulo
+                  visible está oculto) el nombre siga existiendo. */}
+          <div
+            role="group"
+            aria-label="Pasos de la reserva"
+            className="flex items-center justify-center space-x-4"
+          >
             {['Servicio', 'Tus Datos', 'Confirmar'].map((label, idx) => {
               const stepNumber = idx + 1;
               const isActive = step === 'service' && idx === 0 ||
@@ -258,17 +299,29 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
               return (
                 <div key={label} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
-                    isActive ? 'bg-brand-dark text-white' :
-                    isCompleted ? 'bg-brand-muted text-white' :
-                    'bg-brand-muted/20 text-brand-muted'
-                  }`}>
+                  <div
+                    aria-current={isActive ? 'step' : undefined}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
+                      isActive ? 'bg-brand-dark text-white' :
+                      isCompleted ? 'bg-brand-muted text-white' :
+                      'bg-brand-muted/20 text-brand-muted'
+                    }`}
+                  >
                     {isCompleted && step !== 'submitting' ? (
                       <Check className="w-5 h-5" aria-label={`Paso ${stepNumber} completado: ${label}`} />
                     ) : (
                       <span aria-hidden="true">{stepNumber}</span>
                     )}
                   </div>
+                  {/* El rótulo visible se oculta en móvil (`hidden sm:inline`),
+                      así que en ese viewport el nombre del paso solo existiría
+                      para quien ve la pantalla. Este hermano `sr-only sm:hidden`
+                      lo mantiene en el árbol de accesibilidad SOLO en móvil
+                      (en escritorio el rótulo visible ya lo nombra, y así no se
+                      lee dos veces). */}
+                  <span className="sr-only sm:hidden">
+                    {`Paso ${stepNumber} de 3: ${label}${isActive ? ', en curso' : ''}`}
+                  </span>
                   <span className={`hidden sm:inline text-sm ${
                     isActive ? 'font-semibold text-brand-dark' : 'text-brand-muted'
                   }`}>{label}</span>
