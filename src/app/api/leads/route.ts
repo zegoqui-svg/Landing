@@ -5,7 +5,16 @@ import { saveLead } from '@/src/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'Datos de lead inválidos' },
+        { status: 400 }
+      );
+    }
     
     // Validate with Zod
     const result = leadSchema.safeParse(body);
@@ -75,9 +84,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  // Protected admin endpoint - should add auth
-  return NextResponse.json({
-    message: 'Use POST to create leads',
-    docs: '/api/leads accepts POST requests with { name, phone, email?, service, preferredDate?, preferredTime? }',
-  });
+  return NextResponse.json(
+    { error: 'Method Not Allowed' },
+    {
+      status: 405,
+      headers: { Allow: 'POST' },
+    }
+  );
 }
