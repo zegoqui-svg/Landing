@@ -16,6 +16,19 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-14 — El endpoint de leads ya no expone un GET engañosamente público
+
+**Principio**: superficie mínima y contratos honestos (OWASP ASVS V2 / HTTP `405 Method Not Allowed`): una ruta que solo acepta `POST` debe rechazarla explícitamente, no anunciar un endpoint administrativo que no existe.
+**Por qué**: candidata acotada que el backlog dejó anotada el 2026-11-13. `src/app/api/leads/route.ts` exponía un `GET` público que decía "Protected admin endpoint - should add auth", aunque no protegía ni datos ni administración: solo devolvía ayuda. Se verificó que el único `fetch('/api/leads')` del repo es un `POST` en `BookingModal.tsx`, así que el `GET` no tenía consumidor.
+**Cambios** (1 archivo, +17/-6 netas): el `GET` ahora responde **405** con `Allow: POST`; además, un `POST` con JSON inválido responde **400** en vez de caer en el `catch` general y devolver 500. No se tocó el flujo válido ni los datos publicados.
+**Medido**: sobre `next start` local, `GET /api/leads` → **405**, cabecera `Allow: POST`, cuerpo `{"error":"Method Not Allowed"}`; `POST` sin cuerpo → **400**, cuerpo `{"success":false,"message":"Datos de lead inválidos"}`. Build verde (`npm run build` exit 0, 19/19 páginas, 151 kB First Load JS sin cambios), `tsc --noEmit` limpio y `git diff --check` sin observaciones.
+**Rama**: mejora-diaria/2026-11-14 (base mejora-diaria/2026-11-13; `main` intacto en `50a86ce`) · commit `155de2c`
+**Preview**: https://spa-landing-9e5akpxxc-zegoqui-svgs-projects.vercel.app — deployment `dpl_Z7jMEED4WTRyUUmcL8Spw4JyDXfF`, READY, `target` = null (≠ production). El proyecto tiene `ssoProtection: all_except_custom_domains`: responde **302 → `vercel.com/sso-api`**, por lo que **hace falta iniciar sesión en Vercel para ver la página**.
+**Métrica esperada**: ↓ superficie pública de la API y ↓ respuestas 500 por payloads malformados; sin cambio visual ni efecto directo en conversión. Proxy: 0 respuestas 200 en `GET /api/leads` y 0 errores 5xx por JSON inválido.
+**Estado**: 🔎 en revisión, pendiente "publica". Sin capturas: no hay binario de Chromium utilizable en el host y el cron no puede usar sudo.
+
+---
+
 ## 2026-11-13 — El modal ya nombra lo que muestra y anuncia en qué paso vas
 
 **Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) y estado del proceso (WCAG 1.3.1) — un diálogo debe decir **qué está mostrando ahora**, y un indicador de progreso debe decir **en qué paso se está**: el rol `dialog` sin nombre coherente anuncia una cosa mientras muestra otra, y un indicador puramente visual no existe para quien no ve la pantalla.
