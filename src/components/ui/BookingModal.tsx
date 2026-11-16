@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Modal } from './Modal';
 import { Button } from './Button';
@@ -63,6 +63,51 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   const chosenCategory = chosenService
     ? serviceCategories.find(c => c.id === chosenService.category)
     : undefined;
+
+  /*
+   * Foco al cambiar de paso (WCAG 2.1 §2.4.3 "Orden del foco" y §3.2.1).
+   *
+   * Antes este archivo NO tenia ni una llamada a `focus()`. Al pulsar
+   * "Continuar", React desmontaba el boton que tenia el foco y el foco caia
+   * a `<body>`: FUERA del `role="dialog"` con `aria-modal="true"`. Con
+   * teclado, el siguiente Tab se iba al principio de la pagina y no al
+   * formulario del paso 2; con lector de pantalla, el cursor virtual
+   * aparecia fuera del dialogo, en silencio. El mismo fallo pasaba al
+   * volver al selector y al entrar en los estados de guardado / error.
+   *
+   * La apertura y el cierre los sigue gestionando el `Modal` (que enfoca el
+   * primer control al abrir y devuelve el foco al CTA al cerrar): aqui solo
+   * se actúa cuando el paso cambia de verdad, para no competir con esa
+   * logica.
+   */
+  const stepPanelRef = useRef<HTMLDivElement>(null);
+  // Paso anterior, para detectar un cambio real de paso (y no la simple
+  // apertura o cierre del modal).
+  const prevStepRef = useRef<Step | null>(null);
+
+  useEffect(() => {
+    // La apertura y el cierre los gestiona el `Modal` (enfoca el primer
+    // control al abrir y devuelve el foco al CTA al cerrar). Aqui solo se
+    // actúa cuando el paso cambia de verdad, es decir, dentro del modal.
+    if (!isOpen) {
+      prevStepRef.current = null;
+      return;
+    }
+    const prevStep = prevStepRef.current;
+    prevStepRef.current = step;
+    // Primer render con el modal abierto: el `Modal` ya enfoca el primer
+    // control, asi que aqui no se toca el foco (evita competir con el).
+    if (prevStep === null || prevStep === step) return;
+    const panel = stepPanelRef.current;
+    if (!panel) return;
+    // Se busca el primer control enfocable del panel nuevo. Si el paso no
+    // tiene ninguno (estados de guardado / exito), el foco cae en el panel
+    // mismo, que es tabbable por `tabIndex={-1}`.
+    const focusable = panel.querySelector<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    (focusable ?? panel).focus();
+  }, [step, isOpen]);
 
   // Horarios de inicio del dia elegido, derivados del horario publicado
   // (`businessHours`). Antes el modal usaba una lista fija que ofrecia 7:00 PM
@@ -128,6 +173,35 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         return 'Reservar cita: no se pudo guardar';
       default:
         return 'Reservar cita';
+    }
+  })();
+
+  /*
+   * Nombre del paso activo, que etiqueta el panel de contenido.
+   *
+   * El indicador de pasos (1/2/3) ya anuncia el paso —con `aria-current="step"`
+   * y el `sr-only sm:hidden`— pero el CONTENIDO de cada paso no estaba
+   * etiquetado por su paso: al entrar en el formulario del paso 2, el lector
+   * de pantalla anuncia el nombre del diálogo ("Reservar cita: tus datos y
+   * disponibilidad") pero no dice que ese es el "Paso 2 de 3". Este rótulo
+   * cierra esa relación (WCAG 1.3.1).
+   */
+  const activeStepLabel = (() => {
+    switch (step) {
+      case 'service':
+        return isPicking
+          ? 'Paso 1 de 3: Servicio — elige el tratamiento'
+          : 'Paso 1 de 3: Servicio — confirma el tratamiento';
+      case 'calendar':
+        return 'Paso 2 de 3: Tus Datos y disponibilidad';
+      case 'submitting':
+        return 'Paso 3 de 3: Confirmar — guardando tus datos';
+      case 'success':
+        return 'Paso 3 de 3: Confirmar — datos guardados';
+      case 'error':
+        return 'Paso 3 de 3: Confirmar — no se pudo guardar';
+      default:
+        return 'Paso 1 de 3: Servicio';
     }
   })();
 
@@ -332,7 +406,30 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
           </div>
         </div>
 
-        <div className="p-6">
+        {/* Nombre del paso activo, SIEMPRE en el árbol de accesibilidad.
+            Los rótulos del indicador de pasos no sirven como objetivo de
+            `aria-labelledby`: el visible es `hidden sm:inline` (display:none
+            en móvil) y el `sr-only sm:hidden` desaparece en escritorio. Este
+            encabezado `sr-only` existe siempre, y con el `id` estable el
+            panel queda etiquetado por el paso que muestra (WCAG 1.3.1). */}
+        <h4 className="sr-only" id="booking-step-panel-label">{activeStepLabel}</h4>
+
+        {/* Panel del paso activo.
+            `ref` + `tabIndex={-1}`: al cambiar de paso el foco se mueve al
+            primer control del panel nuevo (ver el `useEffect` de arriba). Si
+            el paso no tiene control alguno ("Guardando", "datos guardados"),
+            el foco cae en el panel, que por `tabIndex={-1}` NO añade un
+            tabulador nuevo: solo sirve de destino del foco.
+            `role="region"` + `aria-labelledby`: la region queda nombrada por
+            el paso que muestra, de modo que el lector de pantalla la
+            anuncia al entrar en ella. */}
+        <div
+          className="p-6"
+          ref={stepPanelRef}
+          tabIndex={-1}
+          role="region"
+          aria-labelledby="booking-step-panel-label"
+        >
           {/* STEP 1a: selector de servicio (CTA "Reservar" sin servicio preseleccionado) */}
           {step === 'service' && isPicking && !chosenService && (
             <div className="space-y-6">
