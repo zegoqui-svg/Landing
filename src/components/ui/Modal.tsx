@@ -17,10 +17,28 @@ interface ModalProps {
    * muestra otra no cumple WCAG 4.1.2 (nombre, rol y valor).
    */
   ariaLabel?: string;
+  /**
+   * `id` del elemento que describe al diálogo (WCAG 4.1.2, opcional).
+   *
+   * El nombre dice QUÉ es el diálogo; la descripción dice qué hay que
+   * hacer o tener en cuenta para completarlo. El `id` debe existir en el
+   * DOM mientras el diálogo está abierto: un `aria-describedby` que
+   * apunta a un id inexistente se ignora en silencio, así que el
+   * llamador debe garantizar que el elemento se monte junto al modal.
+   */
+  ariaDescribedBy?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, children, title, ariaLabel, size = 'lg' }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  children,
+  title,
+  ariaLabel,
+  ariaDescribedBy,
+  size = 'lg',
+}: ModalProps) {
   /*
    * §14 Reduced motion: con movimiento reducido el modal no escala ni
    * se desplaza; aparece con un cross-fade corto (sólo opacidad).
@@ -122,6 +140,12 @@ export function Modal({ isOpen, onClose, children, title, ariaLabel, size = 'lg'
             // no lo que mostraba en cada paso (WCAG 4.1.2).
             aria-labelledby={title ? 'modal-title' : undefined}
             aria-label={title ? undefined : ariaLabel || 'Reservar cita'}
+            // Descripción opcional del diálogo (WCAG 4.1.2): el nombre dice
+            // QUÉ es el modal y la descripción dice QUÉ HAY QUE HACER en él.
+            // Antes el diálogo solo tenía nombre, así que el lector de
+            // pantalla anunciaba "Reservar cita: tus datos y disponibilidad"
+            // sin decir que había que elegir día y hora.
+            aria-describedby={ariaDescribedBy}
             className={`relative w-full ${sizes[size]} bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden focus:outline-none`}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}

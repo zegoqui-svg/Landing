@@ -16,6 +16,44 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-17 — El modal de reserva ya dice qué hay que hacer en cada paso
+
+**Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un diálogo necesita **nombre** (qué es), **rol** (que es `dialog`) y **valor** (qué estado tiene); la *descripción* (`aria-describedby`) es el complemento opcional que explica **qué hay que hacer** para completarlo. Y §3.2.2 "On Input"/§3.3.2 "Labels or Instructions": el formulario debe indicar la acción esperada.
+**Por qué**: el backlog quedó sin ítems accionables (los dos originales, #4 y #7, siguen bloqueados por material real que solo tiene Sebastián), pero dejó anotada el 2026-11-13 —y repetida el 2026-11-16— una candidata abierta: **el `Modal` no tenía `aria-describedby`**. La a11y del repo se cerró por superficie (iconos 09/10, formulario 11, controles de estado 12, diálogo e indicador de pasos 13, pestañas 15, foco 16), y la descripción era el único piece del patrón "nombre, rol y valor" que faltaba. `aria-describedby` era **0 apariciones en todo `src/`**.
+**Causa raíz**: el `Modal` tenía `aria-labelledby` (al `<h3>` visible) o `aria-label` (derivado del estado), pero **sin descripción**. El nombre dice QUÉ muestra el modal —"Reservar cita: tus datos y disponibilidad"— pero **no** dice qué hay que hacer en él. Con lector de pantalla, al abrir el paso 2 se anunciaba el nombre y nada más: la clienta no recordaba que había que escribir nombre y teléfono, elegir día **y** hora, ni que el envío termina en WhatsApp. El texto de ayuda ya existía en el DOM ("Elige el tratamiento para tu cita", "Selecciona tu disponibilidad"), pero nadie lo enlazaba como descripción del diálogo.
+**Cambios** (2 archivos, +77/-2 netas, de las que ~40 son comentarios explicativos y ~37 funcionales):
+- **`src/components/ui/Modal.tsx`**: nueva prop opcional `ariaDescribedBy?: string` que se emite como `aria-describedby` en el panel `role="dialog"`. Es genérica a propósito: el `Modal` no sabe qué texto describir, solo recibe el `id` del elemento que lo describe. Si no se pasa la prop, **no se emite el atributo** (verificado) — ningún otro consumidor del `Modal` cambia de comportamiento.
+- **`src/components/ui/BookingModal.tsx`**: `dialogDescription` **derivada del paso** (como el `dialogLabel` y el `activeStepLabel` que ya existían), renderizada en un `<p className="sr-only" id="booking-dialog-description">` dentro del modal, y `ariaDescribedBy="booking-dialog-description"` pasado al `Modal`. **Cinco descripciones distintas**, una por estado: selector / confirmación del servicio / paso 2 (datos + disponibilidad) / guardando / error (más la de éxito).
+**Trampas evitadas**:
+1. **El `id` referenciado tiene que existir SIEMPRE**: un `aria-describedby` que apunta a un id inexistente se ignora en silencio (no hay error, solo ninguna descripción). Por eso el párrafo vive **dentro** del modal y con `id` estable, en vez de colgarlo de un texto visible que solo existe en algunos pasos.
+2. **No se duplica el texto visible**: la ayuda ya se ve en pantalla ("Elige el tratamiento para tu cita", "Selecciona tu disponibilidad"); repetirla en texto visible duplicaría el mensaje. El párrafo es `sr-only`, o sea, existe **solo** para el lector de pantalla. Por eso su texto es **de interfaz** ("qué hacer en este paso"), no una afirmación sobre el negocio: no publica precios, credenciales ni horarios que no estén en `src/data/index.ts` (regla dura #4 del cron).
+3. **La descripción no pisa el nombre**: `aria-label` y `aria-describedby` son atributos distintos y complementarios. `aria-labelledby` sigue sin emitirse cuando no hay `title` visible (verificado), y el nombre accesible del diálogo no cambió en ningún paso.
+4. **`aria-describedby` no es una región viva**: no se usa `aria-live` aquí. El error del paso 3 ya tiene su propia región viva (`role="alert"`, del 2026-11-11) — dos avisos simultáneos duplicarían el mensaje.
+**Medido** (render SSR real del componente de producción con `renderToStaticMarkup`, con el modal **abierto** — la página estática no sirve para esto porque el modal solo se monta con `isOpen`; verificado que `.next/server/app/index.html` **no** contiene ni `booking-dialog-description` ni `aria-describedby`, o sea que la descripción no se filtra al HTML público):
+| | antes | después |
+|---|---|---|
+| `aria-describedby` en todo `src/` | **0** | **1** (en el `Modal`) |
+| `ariaDescribedBy` (prop) en el `Modal` | 0 | **1** |
+| descripciones distintas por paso | 0 | **5** |
+| `id="booking-dialog-description"` en el modal abierto | 0 | **1** |
+| el `id` referenciado **existe** en el DOM | — | **SÍ** (verificado: `aria-describedby="booking-dialog-description"` ↔ `id="booking-dialog-description"`) |
+| sin la prop, el atributo | — | **no se emite** (verificado) |
+| `aria-label` + `aria-describedby` coexisten | — | **SÍ**, sin conflicto |
+| `aria-labelledby` sin `title` | 0 | **0** (sin cambios) |
+| nombre accesible del diálogo (selector / con servicio) | "Reservar cita: elige el tratamiento" / "Reservar cita: Reductivos" | **igual** (sin pérdida) |
+| `role="region"` / `aria-labelledby` del panel / `aria-current="step"` | 1 / 1 / 1 | 1 / 1 / 1 (**sin pérdida**) |
+| servicios en el selector | 9 | **9** (sin pérdida) |
+| descripción del selector vs. de la confirmación | — | **distintas** (verificado: "Elige el tratamiento… y pulsa Continuar." vs. "Confirma el tratamiento elegido…") |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 151 kB | **151 kB** (sin cambios) |
+Build verde (`npm run build` exit 0, `Compiled successfully`, 19/19 páginas, 151 kB First Load JS sin cambios), `tsc --noEmit` limpio (exit 0), `git diff --check` sin observaciones.
+**Rama**: mejora-diaria/2026-11-17 (base mejora-diaria/2026-11-16, commit `ac118cc`) · commit de código `PENDING`
+**Preview**: PENDING (deployment de la rama)
+**Métrica esperada**: ↑ tasa de finalización del flujo de reserva con lector de pantalla y ↑ completitud del paso 2 (datos + día + hora), que es donde se perdían las clientas: el paso 2 exige **cinco** datos (nombre, teléfono, día, hora y confirmar por WhatsApp) y el diálogo solo nombraba el paso, sin decir qué llenar. Proxy: ↓ abandono entre la apertura del modal y el paso 2, ↑ envío completado, y auditoría axe: 0 diálogos con `role="dialog"` sin descripción cuando el contenido exige una acción.
+**Estado**: 🔎 en revisión, pendiente "publica". **Sin capturas**: no hay binario de Chromium utilizable en el host (`libatk-1.0.so.0`) y el cron no puede usar sudo; la verificación fue sobre el **render SSR real** del componente de producción con el modal abierto.
+
+---
+
 ## 2026-11-16 — El foco ya sigue al paso del modal de reserva
 
 **Principio**: foco visible y predecible (WCAG 2.1 §2.4.3 "Orden del foco" y §3.2.1 "Al foco") — cuando un control desaparece porque su contenido fue sustituido, el foco debe seguir a la persona al lugar equivalente del contenido nuevo, nunca quedarse en el vacío ni saltar fuera del diálogo. Y §1.3.1 "Info y relaciones": la región de contenido debe estar **relacionada** con el paso que nombra.

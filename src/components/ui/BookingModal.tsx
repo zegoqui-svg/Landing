@@ -205,6 +205,44 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
     }
   })();
 
+  /*
+   * Descripción del diálogo (WCAG 4.1.2, `aria-describedby`).
+   *
+   * El nombre (`activeStepLabel` / `dialogLabel`) dice QUÉ muestra el
+   * modal; la descripción dice QUÉ HAY QUE HACER para completarlo. Antes
+   * el diálogo solo tenía nombre, así que el lector de pantalla
+   * anunciaba "Reservar cita: tus datos y disponibilidad" sin recordar
+   * que había que elegir día y hora — y sin avisar de que el envío se
+   * hace por WhatsApp, que es donde termina la cita.
+   *
+   * Es texto de INTERFAZ (qué hacer en cada paso), no una afirmación
+   * sobre el negocio: no publica precios, credenciales ni horarios que
+   * no estén en `src/data/index.ts`.
+   *
+   * El texto se renderiza en un `<p className="sr-only">` con `id`
+   * estable dentro del modal, para que el `id` exista SIEMPRE que el
+   * modal esté abierto (un `aria-describedby` que apunta a un id
+   * inexistente se ignora en silencio).
+   */
+  const dialogDescription = (() => {
+    switch (step) {
+      case 'service':
+        return isPicking
+          ? 'Elige el tratamiento que quieres reservar y pulsa Continuar.'
+          : 'Confirma el tratamiento elegido y pulsa Continuar para elegir el día y la hora.';
+      case 'calendar':
+        return 'Escribe tu nombre y tu teléfono, elige el día y la hora, y pulsa Reservar por WhatsApp para confirmar tu cita.';
+      case 'submitting':
+        return 'Estamos guardando tus datos.';
+      case 'success':
+        return 'Tus datos se guardaron. Se abrirá WhatsApp para confirmar tu cita.';
+      case 'error':
+        return 'No se pudo guardar tu cita. Corrige los datos e inténtalo de nuevo.';
+      default:
+        return '';
+    }
+  })();
+
   const validateForm = (): boolean => {
     if (!name.trim() || name.length < 2) {
       setErrorMessage('Ingresa tu nombre completo');
@@ -343,7 +381,20 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="xl" ariaLabel={dialogLabel}>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="xl"
+      ariaLabel={dialogLabel}
+      ariaDescribedBy="booking-dialog-description"
+    >
+      {/* Descripción del diálogo (WCAG 4.1.2). Es `sr-only` porque la
+          ayuda ya se ve en pantalla ("Elige el tratamiento para tu cita",
+          "Selecciona tu disponibilidad"): repetirla en texto visible
+          duplicaría el mensaje. Este párrafo existe para que el lector de
+          pantalla la lea al abrir el diálogo, y su `id` es el destino de
+          `aria-describedby`. */}
+      <p id="booking-dialog-description" className="sr-only">{dialogDescription}</p>
       <div className="bg-brand-light">
         <div className="px-6 py-4 bg-brand-white border-b border-brand-dark/10">
           {/* Indicador de pasos (WCAG 4.1.2 / 1.3.1).
