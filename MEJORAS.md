@@ -16,6 +16,45 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-18 — Un enlace de salto: el teclado ya no atraviesa la cabecera en cada página
+
+**Principio**: **bypass blocks** (WCAG 2.1 §2.4.1) — un mecanismo para saltar los bloques de contenido que se repiten. Y §2.4.6 "Headings and Labels" + §1.3.1 "Info and Relationships": cada *landmark* debe ser identificable y distinguible de sus pares. Y §2.4.3 "Focus Order": el orden de tabulación debe seguir el orden visual y de lectura.
+**Por qué**: el backlog quedó sin ítems accionables (los dos originales, #4 y #7, siguen bloqueados por material real que solo tiene Sebastián), pero dejó anotada el 2026-11-16 una candidata de la misma familia "superficie no auditada": **los enlaces del `Header` y del `Footer`**. Se verificó que llegan a destino (`#servicios`, `#experta`, `#testimonios`, `tel:`), pero **su orden de tabulación nunca se había auditado**. La superficie de navegación es la única que se repite en **todas** las páginas del sitio, así que un defecto ahí se paga en cada visita, no en una sección.
+**Causa raíz** (tres defectos encadenados, verificados sobre el código y el build):
+1. **No había enlace de salto** (`skip link`). La cabecera es `fixed` y siempre está presente: para llegar al contenido con teclado había que recorrer el logo (1) + los cuatro enlaces de navegación (2-5) + el botón "Reservar" (6) — **6 paradas de tabulación antes del primer contenido**, en cada página. En móvil eran 3 (logo → Reservar → botón de menú). El WCAG 2.4.1 lo pide explícitamente para bloques repetidos. `skip link` era **0 apariciones en todo `src/`**.
+2. **Dos `<nav>` sin nombre accesible.** El `<nav>` de escritorio y el del menú móvil (un `<motion.nav>`, que renderiza `<nav>`) no tenían `aria-label`: un lector de pantalla los anunciaba igual ("navegación") y no había forma de saber en cuál se estaba. En móvil solo existe el segundo, así que el defecto no se ve al cambiar de viewport.
+3. **El botón del menú no se relacionaba con el menú que controla.** Tenía `aria-expanded` (desde el 2026-10-26) pero no `aria-controls`: el `aria-expanded` decía *que* estaba abierto, no *a qué* se refería.
+**Cambios** (3 archivos, +55/-5 netas, de las que ~26 son comentarios explicativos y ~29 funcionales):
+- **`src/app/layout.tsx`**: (a) el enlace de salto `<a href="#contenido">Saltar al contenido</a>`, **antes de `{children}`** para que sea el primer elemento enfocable del documento, con el patrón estándar `sr-only focus:not-sr-only` (se oculta y solo aparece al recibir el foco); (b) un `<main id="contenido" tabIndex={-1}>` que envuelve a `{children}` — **un solo `main` por página**, en el layout, para que las 4 rutas compartan el mismo destino del salto.
+- **`src/app/page.tsx`**: el `<main>` interno pasa a `<div>` (mismas clases). Dos `main` en un mismo documento es HTML inválido y el lector de pantalla anunciaría dos "main" sin relación entre ellos.
+- **`src/components/sections/Header.tsx`**: `aria-label="Navegacion principal"` en el `<nav>` de escritorio, `id="menu-movil-nav"` + `aria-label="Navegacion movil"` en el del menú móvil, y `aria-controls="menu-movil-nav"` en el botón que lo despliega.
+**Trampas evitadas**:
+1. **`tabIndex={-1}` en el destino es obligatorio.** Sin él, el navegador mueve el scroll al `#contenido` pero **el foco se queda en el enlace de salto**: la siguiente pulsación de Tab se pierde dentro del encabezado en vez de seguir el orden del documento (WCAG 2.4.3). `tabIndex={-1}` hace que el destino *pueda* recibir el foco sin añadir ninguna parada de tabulación nueva.
+2. **El `<main>` tiene que estar en el layout, no en cada página.** Las rutas `/blog` y `/blog/[slug]` no tenían ningún `<main>` (su raíz era un `<div>`): si el destino del salto hubiera vivido solo en la home, el enlace roto en las otras 13 páginas.
+3. **`aria-label` en los dos `<nav>`, no en uno.** Nombrar solo el de escritorio dejaría al móvil sin nombre, que es justo el caso en el que el lector de pantalla necesita distinguir el menú desplegado del resto.
+4. **Cero cambios visuales.** El enlace de salto es `sr-only` (1×1 px, recortado) hasta que recibe el foco; el `<main>` del layout no añade clases de layout (el `pt-16` y el `min-h-screen` siguen en el `div` de la home), y las clases del `Header` no se tocaron.
+**Medido** (sobre el build local, `.next/server/app/`, con los payloads RSC eliminados antes de contar):
+| | antes | después |
+|---|---|---|
+| enlaces de salto (`href="#contenido"`) en `src/` | **0** | **1** |
+| "Saltar al contenido" en el HTML de las 3 rutas | 0 | **1** en cada una (`/`, `/blog`, `/blog/[slug]`) |
+| el enlace de salto es el **primer** elemento enfocable del documento | no había | **sí** (verificado en las 3 rutas: 27 / 13 / 3 elementos enfocables en total) |
+| `<main>` por página | 1 en la home, **0** en las 13 del blog | **1** en las 4 rutas, y siempre con `id="contenido"` + `tabindex="-1"` |
+| `id="contenido"` duplicado en la página | — | **0** (verificado: 1 por página) |
+| `<nav>` con `aria-label` | **0** | **2** ("Navegacion principal" / "Navegacion movil") |
+| `aria-controls` en el repo | **0** | **1** (`"menu-movil-nav"`, apuntando a un `id` que existe) |
+| paradas de tabulación antes del contenido (escritorio) | 6 | **0** (1 pulsación de Tab + Enter) |
+| CSS generado | — | `.sr-only` y `.focus\:not-sr-only:focus` presentes; `.focus\:fixed`, `.focus\:top-3`, `.focus\:left-3`, `.focus\:z-\[60\]:focus{z-index:60}` y `.focus\:bg-brand-dark` presentes |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 151 kB | **151 kB** (sin cambios) |
+`tsc --noEmit` limpio (exit 0). Build verde (`npm run build` exit 0, `Compiled successfully`, `Generating static pages (19/19)`) con **3177 MiB** de RAM libre (por encima del gate de 2 GiB, sin necesidad de tope de heap). `git diff --check` sin observaciones. Sin capturas: no hay binario de Chromium utilizable en el host (`libatk-1.0.so.0`).
+**Rama**: mejora-diaria/2026-11-18 (base mejora-diaria/2026-11-17, commit `c7cac34`; `main` intacto en `50a86ce`)
+**Preview**: pendiente de confirmar tras el push (ver el mensaje final de la corrida).
+**Métrica esperada**: ↓ tiempo hasta el contenido para quien navega con teclado o lector de pantalla: de 6 paradas de tabulación a 1. Proxy medible: ↓ proportion de sesiones que USAN teclado (detectable en Vercel Analytics solo de forma indirecta) y, sobre todo, ↓ abandoning en la home para usuarios de teclado. Cualitativa: no cambia ningún KPI de conversión medible en el corto plazo; el valor es que la navegación del sitio deja de tener una barrera recurrente en **cada** página. En el usuario, cambio **cero** para quien navega con ratón o con scroll: el enlace solo existe cuando recibe el foco.
+**Estado**: 🔎 en revisión — pendiente de "publica".
+
+---
+
 ## 2026-11-17 — El modal de reserva ya dice qué hay que hacer en cada paso
 
 **Principio**: nombre, rol y valor (WCAG 2.1 §4.1.2) — un diálogo necesita **nombre** (qué es), **rol** (que es `dialog`) y **valor** (qué estado tiene); la *descripción* (`aria-describedby`) es el complemento opcional que explica **qué hay que hacer** para completarlo. Y §3.2.2 "On Input"/§3.3.2 "Labels or Instructions": el formulario debe indicar la acción esperada.

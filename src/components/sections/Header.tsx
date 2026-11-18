@@ -56,8 +56,15 @@ export function Header({ onBookClick }: HeaderProps) {
             <span className="text-2xl font-serif font-bold text-brand-terracotta">SILUEL</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          {/*
+            Desktop Navigation.
+            `aria-label` (WCAG 2.4.6): el sitio tiene DOS elementos `<nav>`
+            —este y el del menu movil—. Sin nombre, un lector de pantalla
+            los anuncia igual ("navegacion") y no se distinguen. Con nombre,
+            la persona sabe si esta en la navegacion de escritorio o en el
+            menu desplegado.
+          */}
+          <nav aria-label="Navegacion principal" className="hidden md:flex items-center gap-6">
             <Link href="/" className="text-brand-dark hover:text-brand-terracotta transition-colors">
               Inicio
             </Link>
@@ -82,6 +89,7 @@ export function Header({ onBookClick }: HeaderProps) {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
               aria-expanded={isMenuOpen}
+              aria-controls="menu-movil-nav"
             >
               <svg className="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 {isMenuOpen ? (
@@ -105,6 +113,8 @@ export function Header({ onBookClick }: HeaderProps) {
           {isMenuOpen && (
             <motion.nav
               key="menu-movil"
+              id="menu-movil-nav"
+              aria-label="Navegacion movil"
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}

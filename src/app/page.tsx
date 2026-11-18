@@ -24,7 +24,14 @@ export default function Home() {
   const handleBookClick = () => openBooking();
 
   return (
-    <main className="min-h-screen pt-16">
+    /*
+     * El `main` de la pagina vive en `src/app/layout.tsx` (envuelve a
+     * `{children}`), para que el enlace de salto "Saltar al contenido"
+     * tenga el mismo destino en las 4 rutas del sitio. Aqui solo va un
+     * `div` con el mismo estilo: dos `main` en un mismo documento es HTML
+     * invalido y el lector de pantalla anunciaria dos "main" sin relacion.
+     */
+    <div className="min-h-screen pt-16">
       <Header onBookClick={handleBookClick} />
       <Hero onBookClick={handleBookClick} />
       <ExpertProfile />
@@ -39,6 +46,6 @@ export default function Home() {
         onClose={() => setIsBookingOpen(false)}
         selectedService={selectedService}
       />
-    </main>
+    </div>
   )
 }

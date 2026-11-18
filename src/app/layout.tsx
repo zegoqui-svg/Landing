@@ -238,7 +238,40 @@ export default function RootLayout({
         gtag('js', new Date());
         gtag('config', 'G-3NV0BEHSMD');
       `}} />
-        {children}
+        {/*
+          Enlace de salto (WCAG 2.4.1, "Bypass Blocks").
+          La cabecera es `fixed` y se repite en todas las paginas: sin este
+          enlace, quien navega con teclado tiene que recorrer el logo, los
+          cuatro enlaces de navegacion y el boton "Reservar" (6 paradas) antes
+          de llegar al contenido, en cada pagina del sitio.
+
+          Va antes de `{children}` en el DOM para que sea el PRIMER elemento
+          enfocable de la pagina: la primera pulsacion de Tab lo encuentra.
+          Se oculta con `sr-only` y solo se hace visible al recibir el foco
+          (`focus:not-sr-only`), patron estandar (WAI-ARIA Authoring
+          Practices, "Skip Links").
+
+          Apunta a `#contenido`, el `id` del `<main>` de abajo.
+        */}
+        <a
+          href="#contenido"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-brand-dark focus:px-5 focus:py-3 focus:min-h-[44px] focus:inline-flex focus:items-center focus:text-sm focus:font-medium focus:text-white focus:shadow-lg"
+        >
+          Saltar al contenido
+        </a>
+        {/*
+          Un solo `main` por pagina, aqui en el layout, para que las 4 rutas
+          (`/`, `/blog`, `/blog/[slug]`) compartan el mismo punto de destino
+          del enlace de salto. `tabIndex={-1}` hace que el destino pueda
+          recibir el foco al saltar: sin el, el navegador mueve el scroll pero
+          el foco se queda en el enlace de salto, y la siguiente pulsacion de
+          Tab se pierde dentro del encabezado en vez de seguir el orden del
+          documento (WCAG 2.4.3, "Focus Order"). `tabIndex={-1}` no anade
+          ninguna parada de tabulacion.
+        */}
+        <main id="contenido" tabIndex={-1} className="outline-none">
+          {children}
+        </main>
       </body>
     </html>
   )
