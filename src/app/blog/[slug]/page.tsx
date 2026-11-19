@@ -48,6 +48,77 @@ function buildBodyFromPublishedData(post: BlogPost): string {
   return lines.join('\n')
 }
 
+/**
+ * Convierte el cuerpo "markdown-ish" de `src/data/blog.ts` en bloques.
+ *
+ * Antes el cuerpo se renderizaba linea por linea y las vinetas `- ` se
+ * emitian como `<li>` sueltos, sin un `<ul>`/`<ol>` padre: HTML invalido (el
+ * `<li>` debe ser hijo de una lista) y las viñetas no se anunciaban como
+ * lista. Ademas el `**` en linea (p. ej. `- **5 sesiones:**`) se imprimia
+ * literal, porque solo se quitaba si el parrafo *entero* venia en negrita.
+ */
+type Block =
+  | { kind: 'h2' | 'h3' | 'p'; text: string }
+  | { kind: 'ul'; items: string[] }
+  | { kind: 'ol'; items: string[] };
+
+const H2_CLASS = 'text-2xl font-serif text-brand-dark mt-8 mb-4';
+const H3_CLASS = 'text-xl font-semibold text-brand-dark mt-6 mb-3';
+const P_CLASS = 'text-gray-700 mb-4';
+const LIST_CLASS = 'list-disc pl-6 mb-4 space-y-2 text-gray-700';
+const LI_CLASS = 'text-gray-700';
+
+function parseBody(body: string): Block[] {
+  const blocks: Block[] = [];
+
+  for (const line of body.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    if (trimmed.startsWith('## ')) {
+      blocks.push({ kind: 'h2', text: trimmed.slice(3) });
+      continue;
+    }
+    if (trimmed.startsWith('### ')) {
+      blocks.push({ kind: 'h3', text: trimmed.slice(4) });
+      continue;
+    }
+
+    const bullet = /^- /.test(trimmed);
+    const numbered = /^\d+\.\s/.test(trimmed);
+    if (bullet || numbered) {
+      const kind: 'ul' | 'ol' = bullet ? 'ul' : 'ol';
+      const item = bullet ? trimmed.slice(2) : trimmed.replace(/^\d+\.\s/, '');
+      const last = blocks[blocks.length - 1];
+      // Consecutivas del mismo tipo -> mismo bloque de lista.
+      if (last && (last.kind === 'ul' || last.kind === 'ol') && last.kind === kind) {
+        last.items.push(item);
+      } else {
+        blocks.push({ kind, items: [item] });
+      }
+      continue;
+    }
+
+    blocks.push({ kind: 'p', text: trimmed });
+  }
+
+  return blocks;
+}
+
+/** Resuelve el `**negrita**` en linea a <strong>. */
+function renderInline(text: string, keyPrefix: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={`${keyPrefix}-b${i}`} className="font-semibold text-brand-dark">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 export async function generateStaticParams() {
   return blogPosts.map((post) => ({ slug: post.slug }))
 }
@@ -74,8 +145,8 @@ export default async function BlogPostPage({ params }: Props) {
     notFound()
   }
 
-  const body = post.content ?? buildBodyFromPublishedData(post)
-  const paragraphs = body.split('\n').filter(Boolean)
+  const body = post.content ?? buildBodyFromPublishedData(post);
+  const blocks = parseBody(body);
 
   return (
     <div className="min-h-screen bg-brand-sand">
@@ -95,21 +166,28 @@ export default async function BlogPostPage({ params }: Props) {
           <span>{post.readTime}</span>
         </div>
 
-        <div className="prose prose-lg">
-          {paragraphs.map((paragraph, index) => {
-            if (paragraph.startsWith('## ')) {
-              return <h2 key={index} className="text-2xl font-serif text-brand-dark mt-8 mb-4">{paragraph.replace('## ', '')}</h2>
+        <div>
+          {blocks.map((block, index) => {
+            const key = `b${index}`;
+            if (block.kind === 'h2') {
+              return <h2 key={key} className={H2_CLASS}>{renderInline(block.text, key)}</h2>;
             }
-            if (paragraph.startsWith('### ')) {
-              return <h3 key={index} className="text-xl font-semibold text-brand-dark mt-6 mb-3">{paragraph.replace('### ', '')}</h3>
+            if (block.kind === 'h3') {
+              return <h3 key={key} className={H3_CLASS}>{renderInline(block.text, key)}</h3>;
             }
-            if (paragraph.startsWith('- ') || /^\d+\.\s/.test(paragraph)) {
-              return <li key={index} className="text-gray-700 ml-4 mb-2">{paragraph.replace(/^-\s/, '').replace(/^\d+\.\s/, '')}</li>
+            if (block.kind === 'ul' || block.kind === 'ol') {
+              const ListTag = block.kind;
+              return (
+                <ListTag key={key} className={LIST_CLASS}>
+                  {block.items.map((item, i) => (
+                    <li key={`${key}-i${i}`} className={LI_CLASS}>
+                      {renderInline(item, `${key}-i${i}`)}
+                    </li>
+                  ))}
+                </ListTag>
+              );
             }
-            if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-              return <p key={index} className="text-gray-700 mb-4 font-semibold">{paragraph.replace(/\*\*/g, '')}</p>
-            }
-            return <p key={index} className="text-gray-700 mb-4">{paragraph}</p>
+            return <p key={key} className={P_CLASS}>{renderInline(block.text, key)}</p>;
           })}
         </div>
 

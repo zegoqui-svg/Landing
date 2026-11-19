@@ -16,6 +16,33 @@ Formato de cada entrada:
 
 ---
 
+## 2026-11-19 — Las viñetas del blog ya son listas de verdad
+
+**Principio**: **HTML semántico, no marcado decorativo** (WCAG 2.1 §1.3.1 *Info and Relationships*). Una viñeta que se dibuja con guiones es una *lista*: si el HTML no dice que es una lista, ni el navegador ni el lector de pantalla pueden saberlo. Y **el texto que se publica con sintaxis cruda** (`**5 sesiones:**`) no es el que la clienta lee: es la marca de un formato que alguien olvidó traducir.
+**Por qué**: auditoría de la superficie del blog, hecha porque los ítems #4 y #7 siguen bloqueados por material real. El renderer de `src/app/blog/[slug]/page.tsx` se encargaba de convertir el cuerpo "markdown-ish" de `src/data/blog.ts` en HTML, y lo hacía **línea por línea**. Tres defectos encadenados, todos medidos sobre el build:
+1. **`<li>` sin padre `<ul>`**: las viñetas `- ` se emitían como `<li>` sueltos. El `<li>` **debe** ser hijo de `<ul>`/`<ol>`; sin el padre, el HTML es inválido y el lector de pantalla no anuncia la lista ni su cantidad de elementos. Medido sobre los 11 artículos del build: **3 `<li>` y 0 `<ul>`**.
+2. **`**` literal visible**: el `**` solo se quitaba cuando el párrafo *entero* venía en negrita (`startsWith('**') && endsWith('**')`). El `**` **en línea** — `- **5 sesiones:** Reducción de 1-3 cm` — se imprimía crudo: la clienta leía los asteriscos en el artículo. Medido: **12 apariciones de `**` literal** en el HTML de los 11 artículos.
+3. **`prose prose-lg` era código muerto**: el contenedor del cuerpo usaba las clases de `@tailwindcss/typography`, pero ese plugin **no está instalado** (`tailwind.config.ts` → `plugins: []`, y `@tailwindcss/typography` no está en `package.json`). Tailwind no genera **ningún** `.prose` en el CSS: verificado, **0 apariciones** de `.prose` en el CSS compilado. El contenedor no aportaba estilo ninguno; la tipografía real venía de las clases sueltas de cada elemento.
+**Cambios**: 1 archivo, +92/-14 netas (78 netas) — `src/app/blog/[slug]/page.tsx`. El render línea-por-línea se sustituye por un parser de bloques (`parseBody`) que agrupa las líneas consecutivas de viñeta en **una** lista (`<ul>` para `- `, `<ol>` para `1. `) y resuelve el `**negrita**` en línea a `<strong>` (`renderInline`). Las viñetas reciben estilo de lista real (`list-disc pl-6 space-y-2`), que antes no existía: el `<li>` huérfano se dibujaba como texto indentado, sin punto de viñeta. Se eliminó el envoltorio `prose prose-lg` (clases que no generaban CSS) y las clases de cada elemento se movieron a constantes, para no duplicar el mismo `className` en dos ramas. **Cero cambios en el copy publicado**: el texto de los 11 artículos es idéntico palabra por palabra.
+**Trampa evitada**: el `**` **en línea** y el `**` de párrafo completo son dos casos distintos. Resolver solo el segundo (que era el que ya estaba) deja el primero visible; resolverlo con un `replace(/\*\*/g, '')` a secas destruye el emphasis. Aquí el `**` se convierte en `<strong>` real, conservando el texto.
+**Medido** (comparación build base vs. build nuevo sobre los 11 HTML de `.next/server/app/blog/`):
+| | antes | después |
+|---|---|---|
+| `<li>` reales | 3 | **3** (sin pérdida) |
+| `<ul>`/`<ol>` padres | **0** | **1** (los 3 `<li>` dentro de una `<ul>` real) |
+| `**` literal en el HTML | **12** | **0** |
+| `.prose` en el CSS compilado | 0 (ya era código muerto) | **0** (la clase se eliminó del código) |
+| palabras visibles por artículo | 175 / 124 / 111 / 113 / 113 / 154 / 109 / 140 / 145 / 122 / 149 | **idénticas** (0 perdidas, 0 añadidas) |
+| páginas estáticas generadas | 19 | **19** |
+| First Load JS | 152 kB | **152 kB** (sin cambios) |
+CSS generado verificado: `.list-disc{list-style-type:disc}`, `.pl-6{padding-left:1.5rem}`, `.space-y-2>:not([hidden])~:not([hidden]){margin-top:calc(.5rem * ...)}`. `tsc --noEmit` limpio (exit 0); `git diff --check` sin observaciones. Build verde local (`exit 0`, `Compiled successfully`, `Generating static pages (19/19)`) con **2960 MiB** de RAM libre (por encima del gate de 2 GiB, sin tope de heap).
+**Rama**: `mejora-diaria/2026-11-19` (base `mejora-diaria/2026-11-18`, commit `e52531a`; `main` intacto en `50a86ce`)
+**Métrica esperada**: ↑ legibilidad del artículo *Cuántas Sesiones de Maderoterapia Necesitas* (el único con viñetas) y ↑ compresión del bloque de resultados con lector de pantalla: las 3 viñetas ahora se anuncian como una lista de 3 elementos con su encabezado en negrita, en vez de 3 líneas sueltas con asteriscos. Proxy: ↑ tiempo de lectura hasta el CTA "Agendar por WhatsApp" en las páginas de artículo (el CTA está **debajo** del cuerpo), y ↓scroll hasta el CTA en móvil. Cualitativa hasta tener baseline de analítica por artículo; el cambio altera el render visual solo en las viñetas (punto de viñeta + separación de 0.5rem), así que cualquier delta es atribuible a este commit.
+**Estado**: 🔎 en revisión — pendiente de "publica". Build verde en local y en Vercel (`Compiled successfully`, `Generating static pages (19/19)`, `Build Completed`, sin "Failed to compile"). Producción de `spa-landing` intacta en `dpl_DTpxebR37GcaFjH2FL4hK7kqJL3H` (sha `50a86ce`); 0 deploys promovidos. El auto-preview de `ash-guard-vision` es `target` = null / READY sobre el mismo SHA: ninguna escritura sobre ese proyecto. Sin capturas: no hay binario de Chromium utilizable en el host (`libatk-1.0.so.0`).
+**Pendiente anotado** (mismo patrón, **no corregido hoy**): `src/app/blog/page.tsx:95` y `src/app/blog/[slug]/page.tsx:119` escriben el número de WhatsApp **a mano** (`https://wa.me/523339657478`) en vez de leer `whatsappNumber` de `src/data/index.ts`, que es lo que ya hacen `StickyWhatsApp.tsx` y `BookingModal.tsx`. Es exactamente el patrón "fuente única" que corrigieron las corridas del 2026-11-05 (horario del footer) y del 2026-11-07 (export `BUSINESS_HOURS` huérfano): si el número cambia en `src/data/index.ts`, **estos dos CTA quedan apuntando al número viejo en silencio**. Acotado (2 líneas). También sigue sin fuente publicada la cifra "5 sesiones: Reducción de 1-3 cm" del artículo `cuantas-sesiones-maderoterapia` — la única cifra en centímetros de todo el repo (ya anotado el 2026-11-06).
+
+---
+
 ## 2026-11-18 — Un enlace de salto: el teclado ya no atraviesa la cabecera en cada página
 
 **Principio**: **bypass blocks** (WCAG 2.1 §2.4.1) — un mecanismo para saltar los bloques de contenido que se repiten. Y §2.4.6 "Headings and Labels" + §1.3.1 "Info and Relationships": cada *landmark* debe ser identificable y distinguible de sus pares. Y §2.4.3 "Focus Order": el orden de tabulación debe seguir el orden visual y de lectura.
